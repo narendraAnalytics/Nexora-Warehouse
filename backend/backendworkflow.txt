@@ -1,3 +1,4 @@
+Ready to start Phase 1 — Neon Database Setup. Say the word and we'll begin with the database connection, SQLAlchemy async engine, and all 12 table schemas.
 # 🚀 NEXORA DISTRIBUTION INTELLIGENCE PLATFORM
 
 ## Complete Backend → Frontend → Production Roadmap
@@ -21,7 +22,7 @@
 
 ---
 
-# 📍 PHASE 0 — PROJECT FOUNDATION
+# ✅ PHASE 0 — PROJECT FOUNDATION
 
 Before writing a single line of business logic:
 

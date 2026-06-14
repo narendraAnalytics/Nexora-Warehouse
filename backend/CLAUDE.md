@@ -43,15 +43,21 @@ Automated CEO briefings · Full profitability & inventory visibility · Improved
 
 ## Current Build Status
 
-**Phase: 0 — Fresh Scaffold**
+**Phase: 1 — Database Setup (in progress)**
 
-- Python 3.12.10 pinned via `.python-version`
-- All core dependencies installed via `uv`
-- `main.py` is a placeholder — no business logic written yet
-- No subdirectories exist yet (agents/, api/, database/, etc.)
-- No `.env` file — environment variables not yet configured
+### ✅ Phase 0 — Project Foundation (COMPLETE)
+- ✅ Python 3.12.10 pinned via `.python-version`
+- ✅ All core dependencies installed via `uv`
+- ✅ 14 subdirectory packages created (`agents/`, `api/`, `database/`, etc.)
+- ✅ `config.py` — pydantic-settings, all env vars, `redis_url` property
+- ✅ `constants.py` — Nexora business constants (branches, categories, thresholds)
+- ✅ `llm_factory.py` — `get_llm_pro()` / `get_llm_flash()` using env-configured model names
+- ✅ `main.py` — FastAPI app with lifespan, CORS, `/health` endpoint
+- ✅ `.env` fully configured (Groq, Neon, Redis, Resend, model names)
+- ✅ `.env.example` created for git
+- ✅ Groq API + both models tested — live responses confirmed
 
-**Next step:** Phase 1 → FastAPI app skeleton + Neon database setup
+**Next step:** Phase 1 → Neon database connection + SQLAlchemy async engine + 12 table schema
 
 ---
 
