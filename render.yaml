@@ -1,0 +1,37 @@
+services:
+  - name: nexora-backend
+    type: web
+    env: python
+    region: singapore
+    rootDir: backend
+    buildCommand: pip install uv && uv sync --frozen && uv run python -m rag.seed
+    startCommand: uv run uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: RAG_BACKEND
+        value: pgvector
+      - key: CHROMA_MODE
+        value: local
+      - key: NEON_DB_URL
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GOOGLE_API_KEY
+        sync: false
+      - key: REDIS_HOST
+        sync: false
+      - key: REDIS_PORT
+        sync: false
+      - key: REDIS_USERNAME
+        sync: false
+      - key: REDIS_PASSWORD
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: RESEND_FROM_EMAIL
+        sync: false
+      - key: RESEND_FROM_NAME
+        sync: false
+      - key: ALLOWED_ORIGIN
+        sync: false

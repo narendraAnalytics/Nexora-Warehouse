@@ -7,6 +7,7 @@ from config import settings
 from database.connection import create_pool
 from database.init_db import init_db
 from memory.redis_manager import create_redis_client, create_memory_manager
+from agents import create_inventory_graph, create_demand_forecast_graph, create_procurement_graph, create_supplier_risk_graph
 from api.rag import router as rag_router
 
 
@@ -20,7 +21,18 @@ async def lifespan(app: FastAPI):
     app.state.redis = create_redis_client()
     app.state.memory = create_memory_manager(app.state.redis)
 
-    # Phase 7+: LangGraph checkpointer + store + compiled graph here
+    # Phase 4: Inventory Intelligence Agent (no checkpointer yet — Phase 7+)
+    app.state.inventory_graph = create_inventory_graph(app.state.pool)
+
+    # Phase 5: Demand Forecast Agent
+    app.state.demand_forecast_graph = create_demand_forecast_graph(app.state.pool)
+
+    # Phase 6: Procurement Agent
+    app.state.procurement_graph = create_procurement_graph(app.state.pool)
+
+    # Phase 7: Supplier Risk Agent
+    app.state.supplier_risk_graph = create_supplier_risk_graph(app.state.pool)
+
     yield
 
     await app.state.redis.aclose()

@@ -43,7 +43,39 @@ Automated CEO briefings · Full profitability & inventory visibility · Improved
 
 ## Current Build Status
 
-**Phase: 4 — Inventory Intelligence Agent (next)**
+**Phase: 8 — Warehouse Transfer Agent (next)**
+
+### ✅ Phase 7 — Supplier Risk Agent (COMPLETE)
+- ✅ `tools/supplier_risk_tools.py` — 4 tools: supplier risk scores, PO performance, overdue POs, alternative suppliers
+- ✅ `agents/supplier_risk_agent.py` — ReAct graph, llm_pro (llama-3.3-70b-versatile)
+- ✅ `get_overdue_purchase_orders` — cross-joins POs + suppliers + warehouses, days_overdue calculation
+- ✅ `get_supplier_po_performance` — on_time_rate_pct, avg_delay_days, pending_value_inr per supplier
+- ✅ `get_alternative_suppliers(category, exclude_supplier_id)` — exclusion filter + reliability ranking
+- ✅ Risk tiers in system prompt: CRITICAL ≥7.5 / HIGH 5.0–7.4 / MEDIUM 3.0–4.9 / LOW <3.0
+- ✅ `agents/__init__.py` + `main.py` — supplier_risk_graph wired into lifespan
+
+### ✅ Phase 6 — Procurement Agent (COMPLETE)
+- ✅ `tools/procurement_tools.py` — 4 tools: reorder candidates, suppliers by category, open POs, create draft PO
+- ✅ `agents/procurement_agent.py` — ReAct graph, llm_pro (llama-3.3-70b-versatile)
+- ✅ `create_draft_po` write tool — inserts draft POs with status='draft', initiated_by='agent'
+- ✅ Duplicate-PO guard via has_open_po flag in get_reorder_candidates
+- ✅ Supplier selection: ranked by reliability_score DESC, risk_score ASC, avg_lead_days
+- ✅ `agents/__init__.py` + `main.py` — procurement_graph wired into lifespan
+
+### ✅ Phase 5 — Demand Forecast Agent (COMPLETE)
+- ✅ `tools/demand_forecast_tools.py` — 4 tools: demand velocity, stockout risk, slow movers, cross-branch demand comparison
+- ✅ `agents/demand_forecast_agent.py` — ReAct graph, llm_pro (llama-3.3-70b-versatile)
+- ✅ Thresholds: REORDER_THRESHOLD_DAYS=7 (critical), OVERSTOCK_THRESHOLD_DAYS=90 (excess)
+- ✅ capital_locked calculation: quantity × unit_cost for dead stock valuation
+- ✅ `agents/__init__.py` + `main.py` — demand_forecast_graph wired into lifespan
+
+### ✅ Phase 4 — Inventory Intelligence Agent (COMPLETE)
+- ✅ `tools/inventory_tools.py` — 4 tools: stock levels, reorder alerts, overstock alerts, transfer opportunities
+- ✅ `agents/inventory_agent.py` — ReAct graph, llm_flash (llama-3.1-8b-instant)
+- ✅ `render.yaml` — created at project root with seed build step
+- ✅ `agents/__init__.py` — created, exports all agent graph factories
+- ✅ `main.py` — inventory_graph wired into lifespan (Phase 4 comment)
+- ✅ Server verified: all graphs compile, /health → 200, db=ok, redis=ok
 
 ### ✅ Phase 3 — RAG System (COMPLETE)
 - ✅ pgvector extension enabled in Neon + `document_chunks` table (384-dim VECTOR)
@@ -80,8 +112,6 @@ Automated CEO briefings · Full profitability & inventory visibility · Improved
 - ✅ asyncpg 0.31.0 + psycopg[binary] 3.3.4 installed via uv
 - ✅ Neon MCP used to create tables and seed data directly
 
-**Next step:** Phase 2 → Redis short-term memory manager
-
 ### ✅ Phase 0 — Project Foundation (COMPLETE)
 - ✅ Python 3.12.10 pinned via `.python-version`
 - ✅ All core dependencies installed via `uv`
@@ -93,8 +123,6 @@ Automated CEO briefings · Full profitability & inventory visibility · Improved
 - ✅ `.env` fully configured (Groq, Neon, Redis, Resend, model names)
 - ✅ `.env.example` created for git
 - ✅ Groq API + both models tested — live responses confirmed
-
-**Next step:** Phase 1 → Neon database connection + SQLAlchemy async engine + 12 table schema
 
 ---
 
