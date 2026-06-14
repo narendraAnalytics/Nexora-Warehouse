@@ -1,18 +1,24 @@
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from config import settings
+from database.connection import create_pool
+from database.init_db import init_db
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Phase 3+: database pool init here
+    # Phase 1: database pool
+    app.state.pool = await create_pool()
+    await init_db(app.state.pool)
+
     # Phase 4+: Redis memory manager init here
     # Phase 7+: LangGraph checkpointer + store + compiled graph here
     yield
-    # Cleanup on shutdown
+
+    await app.state.pool.close()
 
 
 app = FastAPI(
@@ -42,10 +48,21 @@ app.add_middleware(
 
 
 @app.get("/health", tags=["System"])
-async def health():
+async def health(request: Request):
+    try:
+        async with request.app.state.pool.acquire() as conn:
+            result = await conn.fetchval("SELECT COUNT(*) FROM warehouses")
+        db_status = "ok"
+        warehouse_count = result
+    except Exception as e:
+        db_status = f"error: {e}"
+        warehouse_count = None
+
     return {
         "status": "ok",
         "service": "nexora-backend",
         "env": settings.APP_ENV,
         "version": "0.1.0",
+        "database": db_status,
+        "warehouses_seeded": warehouse_count,
     }

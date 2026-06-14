@@ -43,7 +43,19 @@ Automated CEO briefings · Full profitability & inventory visibility · Improved
 
 ## Current Build Status
 
-**Phase: 1 — Database Setup (in progress)**
+**Phase: 2 — Redis Memory (next)**
+
+### ✅ Phase 1 — Neon Database Setup (COMPLETE)
+- ✅ `database/connection.py` — asyncpg pool (max 10, idle TTL 300s), checkpointer_cm, store_cm
+- ✅ `database/init_db.py` — CREATE TABLE IF NOT EXISTS for all 12 tables
+- ✅ All 12 tables created in Neon: warehouses, products, users, suppliers, inventory, orders, purchase_orders, stock_transfers, deliveries, finance_records, agent_logs, executive_decisions
+- ✅ 5 branch warehouses seeded (Hyderabad, Bangalore, Chennai, Mumbai, Pune)
+- ✅ `main.py` lifespan — pool init + init_db wired in, graceful close on shutdown
+- ✅ `/health` endpoint now includes live DB check + warehouse count
+- ✅ asyncpg 0.31.0 + psycopg[binary] 3.3.4 installed via uv
+- ✅ Neon MCP used to create tables and seed data directly
+
+**Next step:** Phase 2 → Redis short-term memory manager
 
 ### ✅ Phase 0 — Project Foundation (COMPLETE)
 - ✅ Python 3.12.10 pinned via `.python-version`
