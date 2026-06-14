@@ -7,6 +7,7 @@ from config import settings
 from database.connection import create_pool
 from database.init_db import init_db
 from memory.redis_manager import create_redis_client, create_memory_manager
+from api.rag import router as rag_router
 
 
 @asynccontextmanager
@@ -46,9 +47,7 @@ app.add_middleware(
 )
 
 # ── Routers ────────────────────────────────────────────────────────────────────
-# Registered here as each phase is completed:
-# Phase 2:  api/health (already inline below)
-# Phase 3:  database connected
+app.include_router(rag_router, prefix="/rag", tags=["RAG"])
 # Phase 6+: api/inventory, api/orders, api/suppliers, api/finance, api/agents
 
 

@@ -43,7 +43,21 @@ Automated CEO briefings · Full profitability & inventory visibility · Improved
 
 ## Current Build Status
 
-**Phase: 3 — RAG System (next)**
+**Phase: 4 — Inventory Intelligence Agent (next)**
+
+### ✅ Phase 3 — RAG System (COMPLETE)
+- ✅ pgvector extension enabled in Neon + `document_chunks` table (384-dim VECTOR)
+- ✅ `rag/embedder.py` — ChromaDB's built-in `all-MiniLM-L6-v2` via ONNX (zero API key)
+- ✅ `rag/chunker.py` — `chunk_by_heading()` (markdown) + `chunk_text()` (sliding window)
+- ✅ `rag/pgvector_store.py` — async insert + cosine similarity search via asyncpg
+- ✅ `rag/chroma_store.py` — ChromaDB local/server store with built-in embedding
+- ✅ `rag/retriever.py` — `NexoraRetriever` switching on `RAG_BACKEND` env var
+- ✅ `rag/pipeline.py` — `ingest_document()` end-to-end orchestration
+- ✅ `rag/seed.py` — seed script for 4 knowledge layers (build-step safe)
+- ✅ 4 seed documents: business_sop, supplier_policies, logistics_rules, executive_knowledge
+- ✅ `api/rag.py` — POST /rag/ingest, POST /rag/search, GET /rag/status
+- ✅ `main.py` — rag router registered at `/rag`
+- ✅ `config.py` — EMBED_MODEL, EMBED_DIMENSIONS (384), RAG_BACKEND added
 
 ### ✅ Phase 2 — Redis Memory Manager (COMPLETE)
 - ✅ `memory/redis_manager.py` — RedisMemoryManager class with 5 namespaces

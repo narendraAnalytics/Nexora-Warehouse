@@ -8,6 +8,32 @@ import asyncpg
 async def init_db(pool: asyncpg.Pool) -> None:
     async with pool.acquire() as conn:
         await conn.execute("CREATE EXTENSION IF NOT EXISTS pgcrypto")
+        await conn.execute("CREATE EXTENSION IF NOT EXISTS vector")
+
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS document_chunks (
+                id              UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+                doc_id          TEXT NOT NULL,
+                knowledge_layer TEXT NOT NULL,
+                chunk_index     INTEGER NOT NULL,
+                content         TEXT NOT NULL,
+                metadata        JSONB DEFAULT '{}',
+                embedding       VECTOR(384),
+                created_at      TIMESTAMPTZ DEFAULT NOW(),
+                UNIQUE (doc_id, chunk_index)
+            )
+        """)
+
+        await conn.execute("""
+            CREATE INDEX IF NOT EXISTS idx_chunks_embedding
+                ON document_chunks USING ivfflat (embedding vector_cosine_ops)
+                WITH (lists = 100)
+        """)
+
+        await conn.execute("""
+            CREATE INDEX IF NOT EXISTS idx_chunks_layer
+                ON document_chunks (knowledge_layer)
+        """)
 
         await conn.execute("""
             CREATE TABLE IF NOT EXISTS warehouses (
