@@ -43,7 +43,17 @@ Automated CEO briefings · Full profitability & inventory visibility · Improved
 
 ## Current Build Status
 
-**Phase: 9 — Logistics & Dispatch Agent (next)**
+**Phase: 10 — Order Fulfillment Agent (next)**
+
+### ✅ Phase 9 — Logistics & Dispatch Agent (COMPLETE)
+- ✅ `tools/logistics_tools.py` — 4 tools: dispatch queue, active deliveries, delivery performance, create dispatch
+- ✅ `agents/logistics_agent.py` — ReAct graph, llm_flash (llama-3.1-8b-instant)
+- ✅ `get_dispatch_queue(warehouse_id)` — orders ready to ship sorted by priority + due_date, NOT EXISTS delivery guard
+- ✅ `get_active_deliveries(warehouse_id)` — in-transit deliveries with is_overdue + hours_overdue
+- ✅ `get_delivery_performance()` — per-branch on_time_rate_pct, avg_delivery_hours, overdue count
+- ✅ `create_dispatch` write tool — atomic transaction: INSERT delivery + UPDATE order status='dispatched'
+- ✅ System prompt: Indian highway routes (NH44/NH65/NH48), state-coded vehicle numbers, ETA guidelines
+- ✅ `agents/__init__.py` + `main.py` — logistics_graph wired into lifespan
 
 ### ✅ Phase 8 — Warehouse Transfer Agent (COMPLETE)
 - ✅ `tools/warehouse_transfer_tools.py` — 4 tools: warehouse summary, rebalance candidates, pending transfers, create draft transfer
