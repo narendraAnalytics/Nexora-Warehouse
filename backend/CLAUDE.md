@@ -43,7 +43,16 @@ Automated CEO briefings · Full profitability & inventory visibility · Improved
 
 ## Current Build Status
 
-**Phase: 8 — Warehouse Transfer Agent (next)**
+**Phase: 9 — Logistics & Dispatch Agent (next)**
+
+### ✅ Phase 8 — Warehouse Transfer Agent (COMPLETE)
+- ✅ `tools/warehouse_transfer_tools.py` — 4 tools: warehouse summary, rebalance candidates, pending transfers, create draft transfer
+- ✅ `agents/warehouse_transfer_agent.py` — ReAct graph, llm_flash (llama-3.1-8b-instant)
+- ✅ `get_rebalance_candidates(category)` — exposes from/to warehouse UUIDs + product SKU for direct use by create_draft_transfer
+- ✅ `has_open_transfer` correlated subquery — prevents duplicate transfer creation
+- ✅ `create_draft_transfer` write tool — inserts stock_transfers with status='pending', initiated_by='agent'
+- ✅ Transfer number format: `TRF-YYYYMMDD-XXXXXX`
+- ✅ `agents/__init__.py` + `main.py` — warehouse_transfer_graph wired into lifespan
 
 ### ✅ Phase 7 — Supplier Risk Agent (COMPLETE)
 - ✅ `tools/supplier_risk_tools.py` — 4 tools: supplier risk scores, PO performance, overdue POs, alternative suppliers

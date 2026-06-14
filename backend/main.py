@@ -7,7 +7,13 @@ from config import settings
 from database.connection import create_pool
 from database.init_db import init_db
 from memory.redis_manager import create_redis_client, create_memory_manager
-from agents import create_inventory_graph, create_demand_forecast_graph, create_procurement_graph, create_supplier_risk_graph
+from agents import (
+    create_inventory_graph,
+    create_demand_forecast_graph,
+    create_procurement_graph,
+    create_supplier_risk_graph,
+    create_warehouse_transfer_graph,
+)
 from api.rag import router as rag_router
 
 
@@ -32,6 +38,9 @@ async def lifespan(app: FastAPI):
 
     # Phase 7: Supplier Risk Agent
     app.state.supplier_risk_graph = create_supplier_risk_graph(app.state.pool)
+
+    # Phase 8: Warehouse Transfer Agent
+    app.state.warehouse_transfer_graph = create_warehouse_transfer_graph(app.state.pool)
 
     yield
 
