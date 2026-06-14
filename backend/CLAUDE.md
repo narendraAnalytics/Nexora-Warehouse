@@ -43,7 +43,17 @@ Automated CEO briefings · Full profitability & inventory visibility · Improved
 
 ## Current Build Status
 
-**Phase: 11 — Risk Intelligence Agent (next)**
+**Phase: 12 — Finance & Profitability Agent (next)**
+
+### ✅ Phase 11 — Risk Intelligence Agent (COMPLETE)
+- ✅ `tools/risk_intelligence_tools.py` — 4 tools: risk dashboard, supply chain risks, operational risks, financial exposure
+- ✅ `agents/risk_intelligence_agent.py` — ReAct graph, llm_pro (llama-3.3-70b-versatile)
+- ✅ `get_risk_dashboard()` — single aggregate query: critical suppliers, overdue POs, delayed orders, uncovered stockouts, overstock capital
+- ✅ `get_supply_chain_risks()` — 3-section JSON: high-risk suppliers, overdue POs, uncovered stockouts (no open PO)
+- ✅ `get_operational_risks()` — 3-section JSON: delayed orders, overdue deliveries, branch health %
+- ✅ `get_financial_risk_exposure()` — CTE query: open PO value, overdue PO value, delayed order value, overstock capital, potential lost sales, total_risk_exposure_inr
+- ✅ System prompt: CRITICAL/HIGH/MEDIUM/LOW severity tiers with INR thresholds; remediation ownership matrix
+- ✅ `agents/__init__.py` + `main.py` — risk_intelligence_graph wired into lifespan
 
 ### ✅ Phase 10 — Order Fulfillment Agent (COMPLETE)
 - ✅ `tools/order_fulfillment_tools.py` — 4 tools: order pipeline, delayed orders, order details, escalate order
