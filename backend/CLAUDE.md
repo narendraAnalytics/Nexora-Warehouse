@@ -43,7 +43,18 @@ Automated CEO briefings · Full profitability & inventory visibility · Improved
 
 ## Current Build Status
 
-**Phase: 2 — Redis Memory (next)**
+**Phase: 3 — RAG System (next)**
+
+### ✅ Phase 2 — Redis Memory Manager (COMPLETE)
+- ✅ `memory/redis_manager.py` — RedisMemoryManager class with 5 namespaces
+- ✅ Workflow state: set/get/update/delete (TTL 24h)
+- ✅ HITL approvals: create/get/resolve/list_pending (TTL 7 days)
+- ✅ Alerts: push/get/mark_read with severity filtering (TTL 48h)
+- ✅ Session context: set/get/extend/delete (TTL 1h)
+- ✅ Generic key/value for agent scratch state
+- ✅ `main.py` lifespan — Redis client + memory manager wired in
+- ✅ `/health` endpoint includes live Redis ping check
+- ✅ All operations tested live against Upstash Redis
 
 ### ✅ Phase 1 — Neon Database Setup (COMPLETE)
 - ✅ `database/connection.py` — asyncpg pool (max 10, idle TTL 300s), checkpointer_cm, store_cm

@@ -52,10 +52,10 @@ class Settings(BaseSettings):
 
     @property
     def redis_url(self) -> str:
-        """Construct Redis URL from separate fields. Uses rediss:// (SSL) when password is set."""
+        """Construct Redis URL from separate fields."""
         if self.REDIS_PASSWORD:
             return (
-                f"rediss://{self.REDIS_USERNAME}:{self.REDIS_PASSWORD}"
+                f"redis://{self.REDIS_USERNAME}:{self.REDIS_PASSWORD}"
                 f"@{self.REDIS_HOST}:{self.REDIS_PORT}"
             )
         return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}"

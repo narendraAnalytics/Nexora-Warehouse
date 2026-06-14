@@ -6,18 +6,23 @@ from fastapi.middleware.cors import CORSMiddleware
 from config import settings
 from database.connection import create_pool
 from database.init_db import init_db
+from memory.redis_manager import create_redis_client, create_memory_manager
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Phase 1: database pool
+    # Phase 1: Neon database pool
     app.state.pool = await create_pool()
     await init_db(app.state.pool)
 
-    # Phase 4+: Redis memory manager init here
+    # Phase 2: Redis memory manager
+    app.state.redis = create_redis_client()
+    app.state.memory = create_memory_manager(app.state.redis)
+
     # Phase 7+: LangGraph checkpointer + store + compiled graph here
     yield
 
+    await app.state.redis.aclose()
     await app.state.pool.close()
 
 
@@ -49,20 +54,28 @@ app.add_middleware(
 
 @app.get("/health", tags=["System"])
 async def health(request: Request):
+    # DB check
     try:
         async with request.app.state.pool.acquire() as conn:
-            result = await conn.fetchval("SELECT COUNT(*) FROM warehouses")
+            warehouse_count = await conn.fetchval("SELECT COUNT(*) FROM warehouses")
         db_status = "ok"
-        warehouse_count = result
     except Exception as e:
         db_status = f"error: {e}"
         warehouse_count = None
+
+    # Redis check
+    try:
+        redis_ok = await request.app.state.memory.ping()
+        redis_status = "ok" if redis_ok else "error: ping failed"
+    except Exception as e:
+        redis_status = f"error: {e}"
 
     return {
         "status": "ok",
         "service": "nexora-backend",
         "env": settings.APP_ENV,
-        "version": "0.1.0",
+        "version": "0.2.0",
         "database": db_status,
+        "redis": redis_status,
         "warehouses_seeded": warehouse_count,
     }
