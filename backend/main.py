@@ -14,6 +14,7 @@ from agents import (
     create_supplier_risk_graph,
     create_warehouse_transfer_graph,
     create_logistics_graph,
+    create_order_fulfillment_graph,
 )
 from api.rag import router as rag_router
 
@@ -45,6 +46,9 @@ async def lifespan(app: FastAPI):
 
     # Phase 9: Logistics & Dispatch Agent
     app.state.logistics_graph = create_logistics_graph(app.state.pool)
+
+    # Phase 10: Order Fulfillment Agent
+    app.state.order_fulfillment_graph = create_order_fulfillment_graph(app.state.pool)
 
     yield
 

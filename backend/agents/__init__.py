@@ -4,6 +4,7 @@ from agents.procurement_agent import create_procurement_graph
 from agents.supplier_risk_agent import create_supplier_risk_graph
 from agents.warehouse_transfer_agent import create_warehouse_transfer_graph
 from agents.logistics_agent import create_logistics_graph
+from agents.order_fulfillment_agent import create_order_fulfillment_graph
 
 __all__ = [
     "create_inventory_graph",
@@ -12,4 +13,5 @@ __all__ = [
     "create_supplier_risk_graph",
     "create_warehouse_transfer_graph",
     "create_logistics_graph",
+    "create_order_fulfillment_graph",
 ]
