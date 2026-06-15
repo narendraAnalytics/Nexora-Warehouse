@@ -43,7 +43,21 @@ Automated CEO briefings · Full profitability & inventory visibility · Improved
 
 ## Current Build Status
 
-**Phase: 14 — LangGraph Orchestrator (next)**
+**Phase: 15 — CEO Agent (next)**
+
+### ✅ Phase 14 — LangGraph Orchestrator (COMPLETE)
+- ✅ `agents/orchestrator.py` — supervisor StateGraph: supervisor → invoke_agents → hitl_gate → [post_approval | END]
+- ✅ `create_orchestrator_graph(pool, memory, agent_graphs, checkpointer)` — all 11 domain agents passed as dict
+- ✅ Supervisor node: llm_pro with structured output (AgentSelection Pydantic model) selects target agents
+- ✅ invoke_agents node: calls each selected agent subgraph sequentially via ainvoke, collects outputs
+- ✅ hitl_gate node: keyword detection across agent outputs → creates Redis approval record if HITL triggered
+- ✅ post_approval node: resolves workflow after manager action, sends confirmation
+- ✅ Compiled with `checkpointer=AsyncPostgresSaver` + `interrupt_before=["post_approval"]` for HITL suspend/resume
+- ✅ HITL types: purchase_order | stock_transfer | supplier_replacement | escalation
+- ✅ `graphs/__init__.py` — exports create_orchestrator_graph
+- ✅ `schemas/orchestrator.py` — OrchestratorRunRequest/Response, ApprovalActionRequest/Response, PendingApprovalItem
+- ✅ `api/orchestrator.py` — POST /orchestrator/run, POST /orchestrator/approve/{id}, GET /orchestrator/pending
+- ✅ `main.py` — checkpointer_cm() context held open for full lifespan; orchestrator created last after all domain agents; router at /orchestrator
 
 ### ✅ Phase 13 — Knowledge & RAG Agent + Communication Agent (COMPLETE)
 - ✅ `uv add resend` — Resend SDK 2.30.1 installed

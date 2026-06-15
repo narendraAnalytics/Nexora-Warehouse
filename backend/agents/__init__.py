@@ -9,6 +9,7 @@ from agents.risk_intelligence_agent import create_risk_intelligence_graph
 from agents.finance_agent import create_finance_graph
 from agents.knowledge_agent import create_knowledge_graph
 from agents.communication_agent import create_communication_graph
+from agents.orchestrator import create_orchestrator_graph
 
 __all__ = [
     "create_inventory_graph",
@@ -22,4 +23,5 @@ __all__ = [
     "create_finance_graph",
     "create_knowledge_graph",
     "create_communication_graph",
+    "create_orchestrator_graph",
 ]
