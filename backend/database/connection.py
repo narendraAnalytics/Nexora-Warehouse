@@ -7,9 +7,11 @@ from config import settings
 async def create_pool() -> asyncpg.Pool:
     return await asyncpg.create_pool(
         settings.NEON_DB_URL,
+        ssl="require",                          # explicit SSL — asyncpg ignores sslmode= in DSN
         min_size=2,
         max_size=10,
         max_inactive_connection_lifetime=300,   # recycle before Neon drops idle connections
+        command_timeout=60,                     # fail fast instead of hanging on cold start
     )
 
 

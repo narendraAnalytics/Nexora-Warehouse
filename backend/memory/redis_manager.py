@@ -173,13 +173,16 @@ class RedisMemoryManager:
 # ── Factory ────────────────────────────────────────────────────────────────────
 
 def create_redis_client() -> aioredis.Redis:
+    # Render managed Redis and Upstash both require TLS on non-default ports
+    use_ssl = settings.REDIS_PORT not in (6379,) or settings.REDIS_PASSWORD != ""
     return aioredis.Redis(
         host=settings.REDIS_HOST,
         port=settings.REDIS_PORT,
         username=settings.REDIS_USERNAME,
         password=settings.REDIS_PASSWORD,
         decode_responses=True,
-        ssl=False,
+        ssl=use_ssl,
+        ssl_cert_reqs=None,                 # skip cert verification (Render/Upstash self-signed)
         socket_timeout=5,
         socket_connect_timeout=5,
     )
