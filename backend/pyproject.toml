@@ -23,5 +23,6 @@ dependencies = [
     "pydantic-settings>=2.14.1",
     "python-dotenv>=1.2.2",
     "redis[asyncio]>=8.0.0",
+    "resend>=2.30.1",
     "uvicorn[standard]>=0.49.0",
 ]

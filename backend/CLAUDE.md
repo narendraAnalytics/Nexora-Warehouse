@@ -43,7 +43,18 @@ Automated CEO briefings · Full profitability & inventory visibility · Improved
 
 ## Current Build Status
 
-**Phase: 13 — Knowledge & RAG Agent (next)**
+**Phase: 14 — LangGraph Orchestrator (next)**
+
+### ✅ Phase 13 — Knowledge & RAG Agent + Communication Agent (COMPLETE)
+- ✅ `uv add resend` — Resend SDK 2.30.1 installed
+- ✅ `tools/knowledge_tools.py` — 4 tools: search_business_knowledge, search_supplier_knowledge, search_logistics_knowledge, search_executive_knowledge (wraps NexoraRetriever from Phase 3)
+- ✅ `agents/knowledge_agent.py` — ReAct graph, llm_pro (llama-3.3-70b-versatile), cites sources + confidence scoring in system prompt
+- ✅ `schemas/knowledge.py` + `api/knowledge.py` — POST /knowledge/query, optional layer scoping
+- ✅ `tools/communication_tools.py` — 3 Resend tools: send_alert_email (STOCKOUT/OVERDUE_ORDER/SUPPLIER_DELAY), send_escalation_email (CRITICAL/HIGH/MEDIUM priority), send_executive_report; HTML emails with branded template
+- ✅ `agents/communication_agent.py` — ReAct graph, llm_flash (llama-3.1-8b-instant), natural-language instruction → tool selection → email sent
+- ✅ `schemas/communication.py` + `api/communication.py` — POST /communication/send
+- ✅ WhatsApp deferred — Resend only for now
+- ✅ `agents/__init__.py` + `main.py` — both graphs wired into lifespan, routers at /knowledge and /communication
 
 ### ✅ Phase 12 — Finance & Profitability Agent (COMPLETE)
 - ✅ `backend/.env.example` removed (was causing confusion alongside real `.env`)
