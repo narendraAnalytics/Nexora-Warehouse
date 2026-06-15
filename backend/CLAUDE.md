@@ -43,7 +43,7 @@ Automated CEO briefings · Full profitability & inventory visibility · Improved
 
 ## Current Build Status
 
-**Phase: 18 — Next.js Frontend (next) — Clerk Auth deferred**
+**Phase: 18 — Next.js Frontend COMPLETE — Deployed at `https://nexorawarehouse.vercel.app`**
 
 ### ✅ Phase 17 — Render Production Deployment (COMPLETE)
 - ✅ Backend live at `https://nexora-warehouse.onrender.com`

@@ -4,7 +4,7 @@
 
 ## Current Status
 
-**Phase: 18 — Hero Section COMPLETE**
+**Phase: 18 — Hero Section + Vercel Deployment COMPLETE**
 
 - ✅ Next.js 16 + React 19 + TypeScript scaffold
 - ✅ Tailwind v4 (CSS-first, no `tailwind.config.js`) + `@base-ui/react` + shadcn
@@ -12,7 +12,9 @@
 - ✅ Plus Jakarta Sans via Google Fonts `<link>` (weights 400–800, NOT 900)
 - ✅ Brand tokens, blob/orb/particle animations in `src/app/globals.css`
 - ✅ Cloudinary CDN for images (configured in `next.config.ts`)
-- ⏳ Clerk Auth — deferred until hero + dashboard pages are stable
+- ✅ **Deployed to Vercel: `https://nexorawarehouse.vercel.app`**
+- ✅ Nexora logo as favicon (`src/app/icon.png`) — default Next.js favicon removed
+- ⏳ Clerk Auth — deferred until dashboard pages are stable
 - ⏳ API integration — backend live at `https://nexora-warehouse.onrender.com`
 
 ---

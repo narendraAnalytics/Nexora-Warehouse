@@ -27,7 +27,7 @@ Each folder has its own `CLAUDE.md` with full context. Always read the relevant 
 | Area | Phase | Status |
 |---|---|---|
 | Backend | Phase 17 — Render Deployment | ✅ Complete |
-| Frontend | Phase 18 — Hero Section | ✅ Complete |
+| Frontend | Phase 18 — Hero Section + Vercel Deployment | ✅ Complete |
 | Next up | Phase 18 cont. — Dashboard pages | ⏳ Pending |
 | Deferred | Clerk Auth | ⏳ After frontend stable |
 
@@ -37,6 +37,7 @@ Each folder has its own `CLAUDE.md` with full context. Always read the relevant 
 
 | Service | URL |
 |---|---|
+| **Frontend** | `https://nexorawarehouse.vercel.app` |
 | Backend API | `https://nexora-warehouse.onrender.com` |
 | API Docs | `https://nexora-warehouse.onrender.com/docs` |
 | Frontend (local) | `http://localhost:3000` |
