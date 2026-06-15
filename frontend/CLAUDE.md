@@ -10,7 +10,7 @@
 
 ## Current Status
 
-**Phase: 18 — Hero Section + Vercel Deployment COMPLETE**
+**Phase: 19 — Clerk Auth Integration COMPLETE**
 
 - ✅ Next.js 16 + React 19 + TypeScript scaffold
 - ✅ Tailwind v4 (CSS-first, no `tailwind.config.js`) + `@base-ui/react` + shadcn
@@ -20,7 +20,8 @@
 - ✅ Cloudinary CDN for images (configured in `next.config.ts`)
 - ✅ **Deployed to Vercel: `https://nexorawarehouse.vercel.app`**
 - ✅ Nexora logo as favicon (`src/app/icon.png`) — default Next.js favicon removed
-- ⏳ Clerk Auth — deferred until dashboard pages are stable
+- ✅ Clerk Auth (`@clerk/nextjs` v7.5.2) — login modal, navbar user state, sign-in/sign-up pages
+- ⏳ Dashboard pages — Phase 20
 - ⏳ API integration — backend live at `https://nexora-warehouse.onrender.com`
 
 ---
@@ -33,6 +34,7 @@ Read `node_modules/next/dist/docs/` before writing any API routes, middleware, o
 Known breakages already discovered:
 - `next/font/google` — broken in v16 (`Can't resolve next/font/google/target.css`). Use direct Google Fonts `<link>` tag in `layout.tsx` instead.
 - Font weight 900 doesn't exist for Plus Jakarta Sans. Max is **800**.
+- Middleware file must be `src/proxy.ts` NOT `src/middleware.ts` — Next.js 16 renamed the convention.
 
 ---
 
@@ -46,7 +48,7 @@ Known breakages already discovered:
 | UI Primitives | `@base-ui/react` + shadcn 4.11 | Not Radix — `@base-ui/react` |
 | Font | Plus Jakarta Sans | Google Fonts link, weights 400/500/600/700/800 only |
 | Images | Cloudinary CDN | Hostname configured in `next.config.ts` |
-| Auth | Clerk `^7.5.2` | Not yet wired — add `ClerkProvider` in `layout.tsx` when ready |
+| Auth | Clerk `^7.5.2` | ✅ Wired — `ClerkProvider` in `layout.tsx`, `useUser()` in `page.tsx`, `proxy.ts` middleware |
 | DB | Drizzle ORM + Neon | Not yet wired — schema TBD |
 | Email | Resend + React Email | Not yet wired |
 | Background jobs | Inngest 4.5.1 | Mirrors backend event system |
@@ -109,18 +111,45 @@ Both are configured as `remotePatterns` in `next.config.ts`.
 frontend/
 ├── src/
 │   ├── app/
-│   │   ├── layout.tsx       ← root layout, Plus Jakarta Sans link, metadata
-│   │   ├── page.tsx         ← hero section (client component)
-│   │   └── globals.css      ← Tailwind v4 + brand tokens + all animations
+│   │   ├── layout.tsx                    ← root layout, ClerkProvider, Plus Jakarta Sans
+│   │   ├── page.tsx                      ← hero section (client component, Clerk auth UI)
+│   │   ├── globals.css                   ← Tailwind v4 + brand tokens + all animations
+│   │   ├── onboarding/
+│   │   │   └── page.tsx                  ← username collection (fallback, Clerk handles natively)
+│   │   ├── sign-in/[[...sign-in]]/
+│   │   │   └── page.tsx                  ← Clerk SignIn page (catch-all route)
+│   │   └── sign-up/[[...sign-up]]/
+│   │       └── page.tsx                  ← Clerk SignUp page (catch-all route)
 │   ├── components/
 │   │   └── ui/
-│   │       └── button.tsx   ← shadcn Button (base-ui/react)
-│   └── lib/
-│       └── utils.ts         ← cn() utility (clsx + tailwind-merge)
-├── next.config.ts            ← Cloudinary remotePatterns
-├── components.json           ← shadcn CLI config
-└── samplecode/               ← reference HTML designs (DO NOT delete)
+│   │       └── button.tsx                ← shadcn Button (base-ui/react)
+│   ├── lib/
+│   │   └── utils.ts                      ← cn() utility (clsx + tailwind-merge)
+│   └── proxy.ts                          ← Clerk middleware (public route matcher)
+├── next.config.ts                        ← Cloudinary remotePatterns
+├── components.json                       ← shadcn CLI config
+└── samplecode/                           ← reference HTML designs (DO NOT delete)
 ```
+
+## Clerk Auth
+
+- Package: `@clerk/nextjs` v7.5.2 (v7 — breaking changes from v5/v6)
+- `ClerkProvider` wraps outside `<html>` in `layout.tsx`
+- Middleware: `src/proxy.ts` (NOT `middleware.ts`) with `clerkMiddleware` + `createRouteMatcher`
+- Navbar: `useUser()` → signed-out shows `<SignInButton mode="modal">`, signed-in shows `Welcome, {username}` + `<UserButton />`
+- Hero CTA + mobile overlay: also wrapped with `<SignInButton mode="modal">` when signed out
+- Clerk dashboard: **Require username ON** — username collected in Clerk modal during sign-up
+- Sign-in/sign-up pages at `/sign-in/[[...sign-in]]` and `/sign-up/[[...sign-up]]` (Nexora gradient background)
+- All auth redirects → `/` (hero page)
+
+### Clerk v7 Key Differences
+| Old | New (v7) |
+|---|---|
+| `<SignedIn>` / `<SignedOut>` | `useUser()` + conditional JSX |
+| `redirectUrl` prop | `forceRedirectUrl` prop |
+| `afterSignOutUrl` prop on UserButton | `NEXT_PUBLIC_CLERK_AFTER_SIGN_OUT_URL` env var |
+| `NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL` | `NEXT_PUBLIC_CLERK_SIGN_IN_FORCE_REDIRECT_URL` |
+| `middleware.ts` | `proxy.ts` (Next.js 16) |
 
 ---
 
