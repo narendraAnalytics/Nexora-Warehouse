@@ -1,3 +1,4 @@
+import json
 import re
 
 from fastapi import APIRouter, HTTPException, Query, Request
@@ -92,7 +93,7 @@ async def list_decisions(
                 decision_type=r["decision_type"],
                 title=r["title"],
                 summary=r["summary"],
-                recommendations=r["recommendations"] if r["recommendations"] else None,
+                recommendations=json.loads(r["recommendations"]) if r["recommendations"] else None,
                 priority=r["priority"],
                 status=r["status"],
                 briefing_date=r["briefing_date"],
