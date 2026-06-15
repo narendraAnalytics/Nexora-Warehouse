@@ -16,7 +16,7 @@ def create_domain_functions(pool, agent_graphs: dict, memory: RedisMemoryManager
 
     @inngest_client.create_function(
         fn_id="inventory-low-handler",
-        trigger=inngest.TriggerEvent("inventory/low"),
+        trigger=inngest.TriggerEvent(event="inventory/low"),
         retries=2,
     )
     async def handle_inventory_low(ctx: inngest.Context, step: inngest.Step) -> dict:
@@ -75,7 +75,7 @@ def create_domain_functions(pool, agent_graphs: dict, memory: RedisMemoryManager
 
     @inngest_client.create_function(
         fn_id="order-created-handler",
-        trigger=inngest.TriggerEvent("order/created"),
+        trigger=inngest.TriggerEvent(event="order/created"),
         retries=2,
     )
     async def handle_order_created(ctx: inngest.Context, step: inngest.Step) -> dict:
@@ -117,7 +117,7 @@ def create_domain_functions(pool, agent_graphs: dict, memory: RedisMemoryManager
 
     @inngest_client.create_function(
         fn_id="supplier-delay-handler",
-        trigger=inngest.TriggerEvent("supplier/delay"),
+        trigger=inngest.TriggerEvent(event="supplier/delay"),
         retries=2,
     )
     async def handle_supplier_delay(ctx: inngest.Context, step: inngest.Step) -> dict:
@@ -176,7 +176,7 @@ def create_domain_functions(pool, agent_graphs: dict, memory: RedisMemoryManager
 
     @inngest_client.create_function(
         fn_id="warehouse-transfer-handler",
-        trigger=inngest.TriggerEvent("warehouse/transfer"),
+        trigger=inngest.TriggerEvent(event="warehouse/transfer"),
         retries=2,
     )
     async def handle_warehouse_transfer(ctx: inngest.Context, step: inngest.Step) -> dict:
@@ -231,7 +231,7 @@ def create_domain_functions(pool, agent_graphs: dict, memory: RedisMemoryManager
 
     @inngest_client.create_function(
         fn_id="finance-updated-handler",
-        trigger=inngest.TriggerEvent("finance/updated"),
+        trigger=inngest.TriggerEvent(event="finance/updated"),
         retries=2,
     )
     async def handle_finance_updated(ctx: inngest.Context, step: inngest.Step) -> dict:

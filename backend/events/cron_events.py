@@ -14,7 +14,7 @@ def create_cron_functions(pool, agent_graphs: dict, settings: Settings) -> list:
 
     @inngest_client.create_function(
         fn_id="ceo-morning-briefing",
-        trigger=inngest.TriggerCron("0 8 * * *"),
+        trigger=inngest.TriggerCron(cron="0 8 * * *"),
         retries=1,
     )
     async def ceo_morning_briefing(ctx: inngest.Context, step: inngest.Step) -> dict:
