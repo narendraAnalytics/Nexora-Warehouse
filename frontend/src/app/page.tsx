@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import { useUser, SignInButton, UserButton } from "@clerk/nextjs";
 
 const LOGO_URL =
   "https://res.cloudinary.com/dkqbzwicr/image/upload/q_auto/f_auto/v1781526126/logoImage_nonxua.png";
@@ -51,6 +52,7 @@ function getStatIconStyle(cls: string): React.CSSProperties {
 }
 
 export default function HeroPage() {
+  const { user, isSignedIn, isLoaded } = useUser();
   const [menuOpen, setMenuOpen] = useState(false);
   const [counts, setCounts] = useState([0, 0, 0, 0]);
   const hwRef = useRef<HTMLDivElement>(null);
@@ -131,13 +133,24 @@ export default function HeroPage() {
             {link}
           </a>
         ))}
-        <a
-          href="#"
-          className="no-underline font-bold text-base text-white rounded-[50px] px-11 py-[13px]"
-          style={{ background: "linear-gradient(130deg,#3EE8C2,#18D8C3 55%,#A855F7)" }}
-        >
-          Get Started →
-        </a>
+        {isSignedIn ? (
+          <a
+            href="#"
+            className="no-underline font-bold text-base text-white rounded-[50px] px-11 py-[13px]"
+            style={{ background: "linear-gradient(130deg,#3EE8C2,#18D8C3 55%,#A855F7)" }}
+          >
+            Get Started →
+          </a>
+        ) : (
+          <SignInButton mode="modal" forceRedirectUrl="/">
+            <a
+              className="no-underline font-bold text-base text-white rounded-[50px] px-11 py-[13px] cursor-pointer"
+              style={{ background: "linear-gradient(130deg,#3EE8C2,#18D8C3 55%,#A855F7)" }}
+            >
+              Get Started →
+            </a>
+          </SignInButton>
+        )}
       </div>
 
       {/* ── HERO WRAPPER ── */}
@@ -213,29 +226,50 @@ export default function HeroPage() {
 
             {/* Actions */}
             <div className="flex items-center gap-[9px] shrink-0">
-              {/* Login */}
-              <a
-                href="#"
-                className="hidden md:inline-flex items-center gap-1.5 rounded-[40px]
-                  text-[rgba(255,255,255,0.90)] font-semibold no-underline cursor-pointer
-                  transition-[background,transform] duration-[220ms]
-                  hover:bg-[rgba(255,255,255,0.22)] hover:text-white hover:-translate-y-px"
-                style={{
-                  padding: "9px 20px",
-                  background: "rgba(255,255,255,0.14)",
-                  border: "1px solid rgba(255,255,255,0.30)",
-                  fontSize: "13px",
-                }}
-              >
-                <svg
-                  width="13" height="13" viewBox="0 0 24 24" fill="none"
-                  stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
-                >
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                  <circle cx="12" cy="7" r="4" />
-                </svg>
-                Login
-              </a>
+              {/* Auth area */}
+              {isLoaded && (
+                isSignedIn ? (
+                  <div className="hidden md:flex items-center gap-[10px]">
+                    <span
+                      className="font-semibold text-[rgba(255,255,255,0.88)] whitespace-nowrap"
+                      style={{ fontSize: "13px" }}
+                    >
+                      Welcome, {user?.username || user?.firstName || "User"}
+                    </span>
+                    <UserButton
+                      appearance={{
+                        elements: {
+                          avatarBox: "w-9 h-9 rounded-full ring-2 ring-[#3EE8C2]/40",
+                        },
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <SignInButton mode="modal" forceRedirectUrl="/">
+                    <a
+                      className="hidden md:inline-flex items-center gap-1.5 rounded-[40px]
+                        text-[rgba(255,255,255,0.90)] font-semibold no-underline cursor-pointer
+                        transition-[background,transform] duration-[220ms]
+                        hover:bg-[rgba(255,255,255,0.22)] hover:text-white hover:-translate-y-px"
+                      style={{
+                        padding: "9px 20px",
+                        background: "rgba(255,255,255,0.14)",
+                        border: "1px solid rgba(255,255,255,0.30)",
+                        fontSize: "13px",
+                      }}
+                    >
+                      <svg
+                        width="13" height="13" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                      >
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                        <circle cx="12" cy="7" r="4" />
+                      </svg>
+                      Login
+                    </a>
+                  </SignInButton>
+                )
+              )}
 
               {/* Hamburger */}
               <button
@@ -326,21 +360,40 @@ export default function HeroPage() {
 
             {/* CTA Row */}
             <div className="flex items-center gap-[14px] mb-[46px] flex-wrap">
-              <a
-                href="#"
-                className="inline-flex items-center gap-2 rounded-[50px] text-white font-bold
-                  no-underline relative overflow-hidden cursor-pointer
-                  transition-all duration-300
-                  hover:-translate-y-[3px] hover:scale-[1.04]"
-                style={{
-                  padding: "14px 34px",
-                  fontSize: "15.5px",
-                  background: "linear-gradient(130deg,#3EE8C2,#18D8C3 50%,#A855F7)",
-                  boxShadow: "0 6px 32px rgba(62,232,194,0.56), 0 2px 12px rgba(0,0,0,0.10)",
-                }}
-              >
-                Get Started &nbsp;→
-              </a>
+              {isSignedIn ? (
+                <a
+                  href="#"
+                  className="inline-flex items-center gap-2 rounded-[50px] text-white font-bold
+                    no-underline relative overflow-hidden cursor-pointer
+                    transition-all duration-300
+                    hover:-translate-y-[3px] hover:scale-[1.04]"
+                  style={{
+                    padding: "14px 34px",
+                    fontSize: "15.5px",
+                    background: "linear-gradient(130deg,#3EE8C2,#18D8C3 50%,#A855F7)",
+                    boxShadow: "0 6px 32px rgba(62,232,194,0.56), 0 2px 12px rgba(0,0,0,0.10)",
+                  }}
+                >
+                  Get Started &nbsp;→
+                </a>
+              ) : (
+                <SignInButton mode="modal" forceRedirectUrl="/">
+                  <a
+                    className="inline-flex items-center gap-2 rounded-[50px] text-white font-bold
+                      no-underline relative overflow-hidden cursor-pointer
+                      transition-all duration-300
+                      hover:-translate-y-[3px] hover:scale-[1.04]"
+                    style={{
+                      padding: "14px 34px",
+                      fontSize: "15.5px",
+                      background: "linear-gradient(130deg,#3EE8C2,#18D8C3 50%,#A855F7)",
+                      boxShadow: "0 6px 32px rgba(62,232,194,0.56), 0 2px 12px rgba(0,0,0,0.10)",
+                    }}
+                  >
+                    Get Started &nbsp;→
+                  </a>
+                </SignInButton>
+              )}
               <a
                 href="#"
                 className="inline-flex items-center gap-[11px] rounded-[50px]

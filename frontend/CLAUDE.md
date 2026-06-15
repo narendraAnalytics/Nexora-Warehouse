@@ -2,6 +2,12 @@
 
 # Nexora Warehouse — Frontend Developer Guide
 
+| Skill | Path | When to Use |
+|---|---|---|
+| `langgraphpythonfastapi` | `C:\Users\ES\.claude\skills\langgraphpythonfastapi\SKILL.md` | Any backend work — FastAPI routes, LangGraph agents, tools, memory, RAG, events |
+
+
+
 ## Current Status
 
 **Phase: 18 — Hero Section + Vercel Deployment COMPLETE**
