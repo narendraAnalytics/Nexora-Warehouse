@@ -182,7 +182,7 @@ def create_redis_client() -> aioredis.Redis:
         password=settings.REDIS_PASSWORD,
         decode_responses=True,
         ssl=use_ssl,
-        ssl_cert_reqs=None,                 # skip cert verification (Render/Upstash self-signed)
+        ssl_cert_reqs="none",               # skip cert verification (Render/Upstash self-signed)
         socket_timeout=5,
         socket_connect_timeout=5,
     )
