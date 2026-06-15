@@ -8,6 +8,7 @@ Key namespaces:
   nexora:session:{id}    — per-agent session context (TTL 1h)
 """
 import json
+import ssl as _ssl
 import uuid
 from datetime import datetime, timezone
 from typing import Any
@@ -173,16 +174,22 @@ class RedisMemoryManager:
 # ── Factory ────────────────────────────────────────────────────────────────────
 
 def create_redis_client() -> aioredis.Redis:
-    # Render managed Redis and Upstash both require TLS on non-default ports
     use_ssl = settings.REDIS_PORT not in (6379,) or settings.REDIS_PASSWORD != ""
+
+    ssl_ctx: _ssl.SSLContext | None = None
+    if use_ssl:
+        # redis-py 8.x async requires an SSLContext object — string ssl_cert_reqs is sync-only
+        ssl_ctx = _ssl.create_default_context()
+        ssl_ctx.check_hostname = False
+        ssl_ctx.verify_mode = _ssl.CERT_NONE
+
     return aioredis.Redis(
         host=settings.REDIS_HOST,
         port=settings.REDIS_PORT,
         username=settings.REDIS_USERNAME,
         password=settings.REDIS_PASSWORD,
         decode_responses=True,
-        ssl=use_ssl,
-        ssl_cert_reqs="none",               # skip cert verification (Render/Upstash self-signed)
+        ssl=ssl_ctx,
         socket_timeout=5,
         socket_connect_timeout=5,
     )
