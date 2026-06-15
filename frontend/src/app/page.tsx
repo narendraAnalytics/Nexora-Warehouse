@@ -6,7 +6,7 @@ import Image from "next/image";
 const LOGO_URL =
   "https://res.cloudinary.com/dkqbzwicr/image/upload/q_auto/f_auto/v1781526126/logoImage_nonxua.png";
 const HERO_IMG_URL =
-  "https://res.cloudinary.com/dkqbzwicr/image/upload/q_auto/f_auto/v1781526127/rightsideimage_ext740.png";
+  "https://res.cloudinary.com/dkqbzwicr/image/upload/q_auto/f_auto/v1781538183/logoImage_epnuo8.png";
 
 const NAV_LINKS = ["Home", "Features", "Solutions", "Pricing", "About Us", "Contact"];
 
@@ -53,7 +53,6 @@ function getStatIconStyle(cls: string): React.CSSProperties {
 export default function HeroPage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [counts, setCounts] = useState([0, 0, 0, 0]);
-  const [revealed, setRevealed] = useState(false);
   const hwRef = useRef<HTMLDivElement>(null);
 
   /* spawn floating particles */
@@ -102,12 +101,6 @@ export default function HeroPage() {
       });
     }, 400);
     return () => clearTimeout(timer);
-  }, []);
-
-  /* 24/7 reveal after counters finish */
-  useEffect(() => {
-    const t = setTimeout(() => setRevealed(true), 1150);
-    return () => clearTimeout(t);
   }, []);
 
   return (
@@ -494,7 +487,6 @@ export default function HeroPage() {
                     {stat.icon}
                   </div>
                   <div
-                    key={`num-${idx}-${revealed}`}
                     className="num-pop font-extrabold text-white leading-none"
                     style={{
                       fontSize: "17px",
@@ -503,7 +495,7 @@ export default function HeroPage() {
                     }}
                   >
                     {"text" in stat
-                      ? (revealed ? stat.text : "")
+                      ? stat.text
                       : stat.cls === "si3"
                         ? (counts[idx] >= 10 ? "1K+" : "0K+")
                         : counts[idx] + stat.suffix}
