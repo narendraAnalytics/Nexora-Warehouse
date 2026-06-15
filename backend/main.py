@@ -28,6 +28,8 @@ from api.knowledge import router as knowledge_router
 from api.communication import router as communication_router
 from api.ceo import router as ceo_router
 from api.orchestrator import router as orchestrator_router
+from events import inngest_client, create_inngest_functions
+from inngest.fast_api import serve as inngest_serve
 
 
 @asynccontextmanager
@@ -97,6 +99,12 @@ async def lifespan(app: FastAPI):
         app.state.orchestrator_graph = create_orchestrator_graph(
             app.state.pool, app.state.memory, agent_graphs, checkpointer
         )
+
+        # Phase 16: Inngest — register event handlers + cron at /api/inngest
+        inngest_fns = create_inngest_functions(
+            app.state.pool, agent_graphs, app.state.memory, settings
+        )
+        inngest_serve(app, inngest_client, inngest_fns)
 
         yield
 

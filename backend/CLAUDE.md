@@ -43,7 +43,23 @@ Automated CEO briefings · Full profitability & inventory visibility · Improved
 
 ## Current Build Status
 
-**Phase: 16 — Inngest Events (next)**
+**Phase: 17 — Clerk Auth (next)**
+
+### ✅ Phase 16 — Inngest Events (COMPLETE)
+- ✅ `uv add inngest` — inngest==0.5.18 installed
+- ✅ `config.py` — added INNGEST_DEV: bool (INNGEST_DEV=1 in .env for local dev server), CEO_EMAIL
+- ✅ `events/inngest_client.py` — Inngest client singleton (is_production = not INNGEST_DEV)
+- ✅ `events/domain_events.py` — 5 event handlers via create_domain_functions(pool, agent_graphs, memory):
+  - inventory/low → inventory agent → procurement agent (2 durable steps)
+  - order/created → order_fulfillment agent (1 step)
+  - supplier/delay → supplier_risk agent → procurement agent (2 steps)
+  - warehouse/transfer → warehouse_transfer agent → logistics agent (2 steps)
+  - finance/updated → finance agent → ceo agent (2 steps)
+- ✅ `events/cron_events.py` — create_cron_functions(pool, agent_graphs, settings):
+  - cron 0 8 * * * → CEO morning briefing → communication agent sends email to CEO_EMAIL
+- ✅ `events/__init__.py` — create_inngest_functions() factory; exports inngest_client
+- ✅ `main.py` — inngest_serve(app, inngest_client, fns) registers /api/inngest route in lifespan
+- ✅ All handlers use step.run() with async callables (durable, retried on error)
 
 ### ✅ Phase 15 — CEO Agent (COMPLETE)
 - ✅ `tools/ceo_tools.py` — 4 tools: get_executive_kpis, get_risk_summary, get_operations_pulse, log_executive_decision

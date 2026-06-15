@@ -40,9 +40,13 @@ class Settings(BaseSettings):
     RESEND_FROM_EMAIL: str = ""
     RESEND_FROM_NAME: str = ""
 
-    # Events (Inngest) — Phase 8+
+    # Events (Inngest) — Phase 16
     INNGEST_SIGNING_KEY: str = ""
     INNGEST_EVENT_KEY: str = ""
+    INNGEST_DEV: bool = False          # Set True via INNGEST_DEV=1 in .env for local dev server
+
+    # CEO
+    CEO_EMAIL: str = "narendra.adp@gmail.com"
 
     # Auth (Clerk) — Phase 11+
     CLERK_SECRET_KEY: str = ""
