@@ -6,6 +6,7 @@ from agents.warehouse_transfer_agent import create_warehouse_transfer_graph
 from agents.logistics_agent import create_logistics_graph
 from agents.order_fulfillment_agent import create_order_fulfillment_graph
 from agents.risk_intelligence_agent import create_risk_intelligence_graph
+from agents.finance_agent import create_finance_graph
 
 __all__ = [
     "create_inventory_graph",
@@ -16,4 +17,5 @@ __all__ = [
     "create_logistics_graph",
     "create_order_fulfillment_graph",
     "create_risk_intelligence_graph",
+    "create_finance_graph",
 ]

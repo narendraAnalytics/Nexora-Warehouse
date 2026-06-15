@@ -43,7 +43,20 @@ Automated CEO briefings · Full profitability & inventory visibility · Improved
 
 ## Current Build Status
 
-**Phase: 12 — Finance & Profitability Agent (next)**
+**Phase: 13 — Knowledge & RAG Agent (next)**
+
+### ✅ Phase 12 — Finance & Profitability Agent (COMPLETE)
+- ✅ `backend/.env.example` removed (was causing confusion alongside real `.env`)
+- ✅ `tools/finance_tools.py` — 4 tools: finance dashboard, revenue analysis, cash flow analysis, margin tracking
+- ✅ `agents/finance_agent.py` — ReAct graph, llm_pro (llama-3.3-70b-versatile)
+- ✅ `get_finance_dashboard(warehouse_id?)` — total revenue, costs, net profit, margin % + per-warehouse breakdown
+- ✅ `get_revenue_analysis(warehouse_id?)` — by_category, by_warehouse, monthly_trend (trailing 6 months)
+- ✅ `get_cash_flow_analysis(warehouse_id?)` — monthly inflow/outflow/net + running cumulative + 12-month summary
+- ✅ `get_margin_tracking(warehouse_id?)` — order-level margins, category margins, low-margin orders (<20%) flagged
+- ✅ System prompt: 4-step workflow (dashboard → revenue → cash flow → margin), margin health tiers (EXCELLENT/HEALTHY/ACCEPTABLE/LOW/CRITICAL)
+- ✅ `schemas/finance.py` — FinanceQueryRequest / FinanceQueryResponse
+- ✅ `api/finance.py` — POST /finance/query router
+- ✅ `agents/__init__.py` + `main.py` — finance_graph wired into lifespan, router at `/finance`
 
 ### ✅ Phase 11 — Risk Intelligence Agent (COMPLETE)
 - ✅ `tools/risk_intelligence_tools.py` — 4 tools: risk dashboard, supply chain risks, operational risks, financial exposure

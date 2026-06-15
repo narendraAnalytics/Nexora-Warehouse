@@ -16,8 +16,10 @@ from agents import (
     create_logistics_graph,
     create_order_fulfillment_graph,
     create_risk_intelligence_graph,
+    create_finance_graph,
 )
 from api.rag import router as rag_router
+from api.finance import router as finance_router
 
 
 @asynccontextmanager
@@ -54,6 +56,9 @@ async def lifespan(app: FastAPI):
     # Phase 11: Risk Intelligence Agent
     app.state.risk_intelligence_graph = create_risk_intelligence_graph(app.state.pool)
 
+    # Phase 12: Finance & Profitability Agent
+    app.state.finance_graph = create_finance_graph(app.state.pool)
+
     yield
 
     await app.state.redis.aclose()
@@ -81,7 +86,7 @@ app.add_middleware(
 
 # ── Routers ────────────────────────────────────────────────────────────────────
 app.include_router(rag_router, prefix="/rag", tags=["RAG"])
-# Phase 6+: api/inventory, api/orders, api/suppliers, api/finance, api/agents
+app.include_router(finance_router, prefix="/finance", tags=["Finance"])
 
 
 @app.get("/health", tags=["System"])
