@@ -4,6 +4,7 @@ services:
     env: python
     region: singapore
     rootDir: backend
+    healthCheckPath: /health
     buildCommand: pip install uv && uv sync --frozen && uv run python -m rag.seed
     startCommand: uv run uvicorn main:app --host 0.0.0.0 --port $PORT
     envVars:
@@ -13,6 +14,8 @@ services:
         value: pgvector
       - key: CHROMA_MODE
         value: local
+      - key: LOG_LEVEL
+        value: INFO
       - key: NEON_DB_URL
         sync: false
       - key: GROQ_API_KEY
@@ -32,6 +35,10 @@ services:
       - key: RESEND_FROM_EMAIL
         sync: false
       - key: RESEND_FROM_NAME
+        sync: false
+      - key: INNGEST_SIGNING_KEY
+        sync: false
+      - key: INNGEST_EVENT_KEY
         sync: false
       - key: ALLOWED_ORIGIN
         sync: false
