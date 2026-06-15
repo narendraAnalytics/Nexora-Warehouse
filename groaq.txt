@@ -1,0 +1,30 @@
+Embedding Model: all-MiniLM-L6-v2 via ChromaDB's built-in ONNX runtime
+
+  Neither loader.py nor rag_retriever.py pass a custom embedding function to ChromaDB — so it falls back to ChromaDB's default:  ONNXMiniLM_L6_V2, which runs all-MiniLM-L6-v2 locally via ONNX runtime.
+  # loader.py — no embedding_function= arg → uses default
+  collection = client.get_or_create_collection(
+      name=collection_name,
+      metadata={"hnsw:space": "cosine"},
+  )
+
+  # rag_retriever.py — query_texts= triggers default embedder
+  results = collection.query(query_texts=[query], n_results=n_results)
+
+  Why it works on Render:
+
+  ┌────────────────────┬────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+  │       Factor       │                                                     Detail                                                     │
+  ├────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ No API key         │ Runs 100% locally — no external embedding API                                                                  │
+  ├────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ CPU only           │ ONNX runtime doesn't need a GPU                                                                                │
+  ├────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ Already in         │ onnxruntime==1.26.0 pulled in as a chromadb dependency                                                         │
+  │ requirements       │                                                                                                                │
+  ├────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ Model weights      │ Downloaded from HuggingFace Hub once during seed_knowledge_base.py (the build step), cached into               │
+  │                    │ ./chroma_data/ which is baked into the Render image and survives spin-downs                                    │
+  └────────────────────┴────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+  So on every deploy, the build command runs the seed script, which downloads the weights + creates all embeddings. The ./chroma_data/
+  folder is part of the deployed filesystem and stays alive between cold starts.

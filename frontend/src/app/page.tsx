@@ -13,7 +13,7 @@ const NAV_LINKS = ["Home", "Features", "Solutions", "Pricing", "About Us", "Cont
 const STATS = [
   { icon: "📦", val: 25, suffix: "K+", label: "Products\nStored",      cls: "si1" },
   { icon: "📈", val: 98, suffix: "%",  label: "Order\nAccuracy",        cls: "si2" },
-  { icon: "👥", val: 1,  suffix: "K+", label: "Happy\nClients",         cls: "si3" },
+  { icon: "👥", val: 10, suffix: "",   label: "Happy\nClients",         cls: "si3" },
   { icon: "🕒", val: 0,  suffix: "",   label: "Non-Stop\nOperations",   cls: "si4", text: "24/7" },
 ];
 
@@ -53,6 +53,7 @@ function getStatIconStyle(cls: string): React.CSSProperties {
 export default function HeroPage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [counts, setCounts] = useState([0, 0, 0, 0]);
+  const [revealed, setRevealed] = useState(false);
   const hwRef = useRef<HTMLDivElement>(null);
 
   /* spawn floating particles */
@@ -101,6 +102,12 @@ export default function HeroPage() {
       });
     }, 400);
     return () => clearTimeout(timer);
+  }, []);
+
+  /* 24/7 reveal after counters finish */
+  useEffect(() => {
+    const t = setTimeout(() => setRevealed(true), 1150);
+    return () => clearTimeout(t);
   }, []);
 
   return (
@@ -173,8 +180,8 @@ export default function HeroPage() {
                 alt="Nexora Warehouse"
                 width={44}
                 height={44}
-                className="rounded-[11px] object-contain p-1"
-                style={{ background: "rgba(255,255,255,0.94)" }}
+                className="rounded-[11px] object-contain"
+                style={{ background: "rgba(240,240,240,0.94)" }}
               />
               <div
                 className="text-[rgba(255,255,255,0.96)] font-extrabold leading-[1.15]"
@@ -388,23 +395,24 @@ export default function HeroPage() {
             </div>
 
             {/* Feature Cards */}
-            <div className="grid grid-cols-4 gap-[11px]">
-              {FEAT_CARDS.map((card) => (
+            <div className="grid grid-cols-4 gap-[8px]">
+              {FEAT_CARDS.map((card, idx) => (
                 <div
                   key={card.label}
-                  className="flex flex-col items-center gap-2.5 rounded-[20px] text-center cursor-pointer
-                    transition-all duration-[320ms]
+                  className="flex flex-col items-center gap-2 rounded-[16px] text-center cursor-pointer
+                    transition-[transform,box-shadow] duration-[320ms]
                     hover:-translate-y-[9px] hover:scale-[1.04]"
                   style={{
-                    padding: "18px 10px 15px",
+                    padding: "10px 8px 9px",
                     background: "rgba(255,255,255,0.12)",
                     backdropFilter: "blur(20px)",
                     border: "1px solid rgba(255,255,255,0.24)",
                     boxShadow: "0 4px 22px rgba(0,0,0,0.08), inset 0 1.5px 0 rgba(255,255,255,0.30)",
+                    animation: `cardFloat 4s ease-in-out infinite ${idx * 0.4}s`,
                   }}
                 >
                   <div
-                    className="w-12 h-12 rounded-[14px] flex items-center justify-center text-[22px]"
+                    className="w-9 h-9 rounded-[11px] flex items-center justify-center text-[17px]"
                     style={getFeatIconStyle(card.cls)}
                   >
                     {card.icon}
@@ -459,7 +467,7 @@ export default function HeroPage() {
               className="stats-anim w-full relative z-[12] grid grid-cols-4 gap-0 rounded-[26px]"
               style={{
                 maxWidth: "648px",
-                padding: "18px 20px",
+                padding: "12px 16px",
                 marginTop: "-28px",
                 background: "rgba(255,255,255,0.16)",
                 backdropFilter: "blur(30px) saturate(1.5)",
@@ -471,7 +479,7 @@ export default function HeroPage() {
               {STATS.map((stat, idx) => (
                 <div
                   key={idx}
-                  className="flex flex-col items-center gap-[5px] p-2 relative text-center"
+                  className="flex flex-col items-center gap-[4px] p-1.5 relative text-center"
                 >
                   {idx > 0 && (
                     <div
@@ -480,20 +488,29 @@ export default function HeroPage() {
                     />
                   )}
                   <div
-                    className="w-10 h-10 rounded-full flex items-center justify-center text-[18px] mb-0.5"
+                    className="w-8 h-8 rounded-full flex items-center justify-center text-[14px] mb-0.5"
                     style={getStatIconStyle(stat.cls)}
                   >
                     {stat.icon}
                   </div>
                   <div
-                    className="font-extrabold text-white leading-none"
-                    style={{ fontSize: "22px", letterSpacing: "-0.8px" }}
+                    key={`num-${idx}-${revealed}`}
+                    className="num-pop font-extrabold text-white leading-none"
+                    style={{
+                      fontSize: "17px",
+                      letterSpacing: "-0.5px",
+                      animationDelay: `${0.7 + idx * 0.15}s`,
+                    }}
                   >
-                    {"text" in stat ? stat.text : (counts[idx] + stat.suffix)}
+                    {"text" in stat
+                      ? (revealed ? stat.text : "")
+                      : stat.cls === "si3"
+                        ? (counts[idx] >= 10 ? "1K+" : "0K+")
+                        : counts[idx] + stat.suffix}
                   </div>
                   <div
                     className="text-[rgba(255,255,255,0.70)] font-medium leading-[1.35]"
-                    style={{ fontSize: "10.5px" }}
+                    style={{ fontSize: "10px" }}
                   >
                     {stat.label.split("\n").map((line, i) => (
                       <span key={i}>{i > 0 && <br />}{line}</span>

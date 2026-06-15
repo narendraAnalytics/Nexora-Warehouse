@@ -1,0 +1,2 @@
+RightsideImage : https://res.cloudinary.com/dkqbzwicr/image/upload/q_auto/f_auto/v1781526127/rightsideimage_ext740.png
+logo : https://res.cloudinary.com/dkqbzwicr/image/upload/q_auto/f_auto/v1781526126/logoImage_nonxua.png

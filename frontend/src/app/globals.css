@@ -194,6 +194,15 @@
   0%,100% { opacity: 1; transform: scale(1); }
   50%     { opacity: 0.55; transform: scale(1.55); }
 }
+@keyframes cardFloat {
+  0%,100% { transform: translateY(0) scale(1); }
+  50%     { transform: translateY(-7px) scale(1.015); }
+}
+@keyframes numPop {
+  from { transform: scale(0.55) translateY(10px); opacity: 0; }
+  to   { transform: scale(1)    translateY(0);    opacity: 1; }
+}
+.num-pop { animation: numPop 0.5s cubic-bezier(0.22,1,0.36,1) both; }
 
 /* ══════════════════════════════════════
    HERO WRAPPER BACKGROUND
@@ -305,7 +314,7 @@
 ══════════════════════════════════════ */
 .hero-l-anim { animation: slideL 0.9s cubic-bezier(0.22,1,0.36,1); }
 .hero-r-anim { animation: slideR 0.9s cubic-bezier(0.22,1,0.36,1) 0.1s; }
-.stats-anim  { animation: slideR 0.9s cubic-bezier(0.22,1,0.36,1) 0.3s; }
+.stats-anim  { animation: slideR 0.9s cubic-bezier(0.22,1,0.36,1) 0.3s both; }
 .img-float   { animation: imgFloat 7s ease-in-out infinite; }
 .badge-dot   { animation: bdot 2.2s ease-in-out infinite; }
 
