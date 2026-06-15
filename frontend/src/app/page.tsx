@@ -237,23 +237,6 @@ export default function HeroPage() {
                 Login
               </a>
 
-              {/* Get Started */}
-              <a
-                href="#"
-                className="inline-flex items-center gap-1 rounded-[40px] text-white font-bold
-                  no-underline whitespace-nowrap cursor-pointer
-                  transition-all duration-[280ms]
-                  hover:-translate-y-0.5 hover:scale-[1.04]"
-                style={{
-                  padding: "10px 22px",
-                  background: "linear-gradient(130deg,#3EE8C2 0%,#18D8C3 55%,#A855F7 100%)",
-                  fontSize: "13.5px",
-                  boxShadow: "0 4px 22px rgba(62,232,194,0.52)",
-                }}
-              >
-                Get Started →
-              </a>
-
               {/* Hamburger */}
               <button
                 className="md:hidden flex items-center justify-center w-10 h-10 rounded-[11px]
