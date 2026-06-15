@@ -7,7 +7,7 @@ Always invoke these skills before implementing backend or frontend work:
 | Skill | Path | When to Use |
 |---|---|---|
 | `langgraphpythonfastapi` | `C:\Users\ES\.claude\skills\langgraphpythonfastapi\SKILL.md` | Any backend work — FastAPI routes, LangGraph agents, tools, memory, RAG, events |
-| `nextstack` | `C:\Users\ES\.claude\skills\nextstack.skill` | Any frontend work — Next.js pages, components, Clerk auth integration (Phase 13+) |
+| `nextstack` | `C:\Users\ES\.claude\skills\nextstack.skill` | Any frontend work — Next.js pages, components, Clerk auth integration (Phase 18+) |
 
 > **Note:** The `langgraphpythonfastapi` skill lives inside a folder as `SKILL.md`. Invoke it via the Skill tool using the name `langgraphpythonfastapi`.
 
@@ -43,7 +43,20 @@ Automated CEO briefings · Full profitability & inventory visibility · Improved
 
 ## Current Build Status
 
-**Phase: 17 — Clerk Auth (next)**
+**Phase: 18 — Next.js Frontend (next) — Clerk Auth deferred**
+
+### ✅ Phase 17 — Render Production Deployment (COMPLETE)
+- ✅ Backend live at `https://nexora-warehouse.onrender.com`
+- ✅ All 13 routes verified: `/health`, `/docs`, `/openapi.json`, `/rag/*`, `/finance/query`,
+  `/knowledge/query`, `/communication/send`, `/ceo/briefing`, `/ceo/decisions`,
+  `/orchestrator/run`, `/orchestrator/approve/{id}`, `/orchestrator/pending`, `/api/inngest`
+- ✅ Database: Neon PostgreSQL — all 12 tables, 5 warehouses seeded
+- ✅ Redis: Render managed Redis port 12657 — plain TCP (not TLS), ssl=None
+- ✅ RAG: 32 chunks seeded across 4 layers (business/supplier/logistics/executive)
+- ✅ `GET /ceo/decisions` fixed — `json.loads()` on `recommendations` jsonb field
+- ✅ Clerk Auth skipped — will integrate after frontend is stable
+- ⏭️ Inngest webhook pending — register `https://nexora-warehouse.onrender.com/api/inngest`
+  in Inngest dashboard when ready
 
 ### ✅ Phase 16 — Inngest Events (COMPLETE)
 - ✅ `uv add inngest` — inngest==0.5.18 installed
