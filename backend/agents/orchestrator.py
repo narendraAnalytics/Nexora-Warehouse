@@ -37,7 +37,7 @@ class OrchestratorState(TypedDict):
 _VALID_AGENTS = [
     "inventory", "demand_forecast", "procurement", "supplier_risk",
     "warehouse_transfer", "logistics", "order_fulfillment",
-    "risk_intelligence", "finance", "knowledge", "communication",
+    "risk_intelligence", "finance", "knowledge", "communication", "ceo",
 ]
 
 _AGENT_DESCRIPTIONS = """
@@ -52,6 +52,7 @@ _AGENT_DESCRIPTIONS = """
 - finance: revenue analysis, cash flow, profit margins, financial dashboard
 - knowledge: SOPs, supplier policies, logistics rules, executive decisions (RAG search)
 - communication: send alert emails, escalation emails, executive reports via Resend
+- ceo: executive KPI briefing, business health scoring, cross-domain risk summary, morning briefing
 """
 
 _SUPERVISOR_PROMPT = f"""You are the Nexora Orchestrator supervisor.
@@ -68,6 +69,7 @@ Rules:
 4. For risk analysis, select risk_intelligence (it already aggregates all domains).
 5. Maximum 3 agents per task unless the task explicitly spans more domains.
 6. knowledge is only needed for policy/SOP questions.
+7. For executive briefings, CEO-level business health analysis, or morning briefings, select ceo.
 
 Return a JSON with "agents" (list of agent names from the valid list) and "reasoning".
 """

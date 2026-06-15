@@ -43,7 +43,21 @@ Automated CEO briefings · Full profitability & inventory visibility · Improved
 
 ## Current Build Status
 
-**Phase: 15 — CEO Agent (next)**
+**Phase: 16 — Inngest Events (next)**
+
+### ✅ Phase 15 — CEO Agent (COMPLETE)
+- ✅ `tools/ceo_tools.py` — 4 tools: get_executive_kpis, get_risk_summary, get_operations_pulse, log_executive_decision
+- ✅ `get_executive_kpis()` — revenue today/yesterday/MTD, orders by status, stockout risk by branch, open PO value, overdue orders
+- ✅ `get_risk_summary()` — high-risk suppliers (risk_score ≥7.5), overdue POs with INR exposure, delayed deliveries
+- ✅ `get_operations_pulse()` — fulfillment rate % per branch (last 7 days), dispatch queue depth, stock health % per branch
+- ✅ `log_executive_decision()` write tool — INSERT into `executive_decisions` (decision_type='briefing'), returns UUID
+- ✅ `agents/ceo_agent.py` — ReAct graph, llm_pro (llama-3.3-70b-versatile), 4-step workflow + Morning Briefing format
+- ✅ Business Health Score tiers: EXCELLENT / HEALTHY / ACCEPTABLE / AT RISK / CRITICAL
+- ✅ System prompt: KPIs → risk → operations pulse → synthesise briefing → log_executive_decision()
+- ✅ `schemas/ceo.py` — CEOBriefingRequest / CEOBriefingResponse / ExecutiveDecision
+- ✅ `api/ceo.py` — POST /ceo/briefing (on-demand briefing), GET /ceo/decisions (recent decisions from DB)
+- ✅ `agents/__init__.py` + `main.py` — ceo_graph wired into lifespan, added to orchestrator agent_graphs dict, router at /ceo
+- ✅ `agents/orchestrator.py` — "ceo" added to _VALID_AGENTS + _AGENT_DESCRIPTIONS + rule 7 in supervisor prompt
 
 ### ✅ Phase 14 — LangGraph Orchestrator (COMPLETE)
 - ✅ `agents/orchestrator.py` — supervisor StateGraph: supervisor → invoke_agents → hitl_gate → [post_approval | END]

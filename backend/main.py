@@ -19,12 +19,14 @@ from agents import (
     create_finance_graph,
     create_knowledge_graph,
     create_communication_graph,
+    create_ceo_graph,
     create_orchestrator_graph,
 )
 from api.rag import router as rag_router
 from api.finance import router as finance_router
 from api.knowledge import router as knowledge_router
 from api.communication import router as communication_router
+from api.ceo import router as ceo_router
 from api.orchestrator import router as orchestrator_router
 
 
@@ -71,6 +73,9 @@ async def lifespan(app: FastAPI):
     # Phase 13: Communication Agent (Resend email)
     app.state.communication_graph = create_communication_graph(settings)
 
+    # Phase 15: CEO / Executive Agent
+    app.state.ceo_graph = create_ceo_graph(app.state.pool)
+
     # Phase 14: Orchestrator — enter checkpointer context for full lifespan
     async with checkpointer_cm() as checkpointer:
         await checkpointer.setup()  # creates LangGraph checkpoint tables in Neon
@@ -87,6 +92,7 @@ async def lifespan(app: FastAPI):
             "finance": app.state.finance_graph,
             "knowledge": app.state.knowledge_graph,
             "communication": app.state.communication_graph,
+            "ceo": app.state.ceo_graph,
         }
         app.state.orchestrator_graph = create_orchestrator_graph(
             app.state.pool, app.state.memory, agent_graphs, checkpointer
@@ -122,6 +128,7 @@ app.include_router(rag_router, prefix="/rag", tags=["RAG"])
 app.include_router(finance_router, prefix="/finance", tags=["Finance"])
 app.include_router(knowledge_router, prefix="/knowledge", tags=["Knowledge"])
 app.include_router(communication_router, prefix="/communication", tags=["Communication"])
+app.include_router(ceo_router, prefix="/ceo", tags=["CEO"])
 app.include_router(orchestrator_router, prefix="/orchestrator", tags=["Orchestrator"])
 
 
