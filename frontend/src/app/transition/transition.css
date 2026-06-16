@@ -278,6 +278,7 @@
   font-size: 9px; font-weight: 700; color: #fff;
   background: rgba(20,10,50,0.55);
   backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   padding: 2px 7px; border-radius: 14px;
   white-space: nowrap; letter-spacing: 0.6px;
   margin-bottom: 3px;
