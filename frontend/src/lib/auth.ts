@@ -19,8 +19,8 @@ export async function getOrCreateUser() {
   const fullName = clerkUser?.fullName ?? null
 
   const result = await sql`
-    INSERT INTO users (clerk_id, email, full_name)
-    VALUES (${userId}, ${email}, ${fullName})
+    INSERT INTO users (clerk_id, email, full_name, role)
+    VALUES (${userId}, ${email}, ${fullName}, 'ceo')
     ON CONFLICT (clerk_id) DO UPDATE
       SET email     = EXCLUDED.email,
           full_name = EXCLUDED.full_name
