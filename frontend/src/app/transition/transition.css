@@ -2,10 +2,6 @@
 
 .page {
   position: fixed; inset: 0;
-  display: flex; flex-direction: column;
-  background: linear-gradient(175deg,
-    #ede8ff 0%, #f0edff 12%, #f6f4ff 28%,
-    #fafbff 50%, #fcfeff 70%, #ffffff 100%);
   overflow: hidden;
   animation: pageFadeIn 0.55s ease both;
   font-family: 'Plus Jakarta Sans', sans-serif;
@@ -44,12 +40,11 @@
   66%      { transform: translate(-18px,16px); }
 }
 
-/* ── Top section ── */
+/* ── Top section — floats over scene ── */
 .top {
-  flex: 0 0 auto;
+  position: absolute; top: 0; left: 0; right: 0; z-index: 20;
   display: flex; flex-direction: column; align-items: center;
   padding: 26px 24px 0;
-  position: relative; z-index: 20;
 }
 
 /* ── Logo ── */
@@ -156,10 +151,10 @@
   transition: opacity 0.28s ease, color 0.28s ease;
 }
 
-/* ── Scene ── */
+/* ── Scene — fills entire viewport ── */
 .scene {
-  flex: 1 1 auto;
-  position: relative; overflow: hidden; min-height: 0;
+  position: absolute; inset: 0; z-index: 1;
+  overflow: hidden;
   opacity: 0;
   animation: sceneReveal 1.0s cubic-bezier(0.22,1,0.36,1) 0.45s forwards;
 }
@@ -173,19 +168,12 @@
   object-fit: cover; object-position: center bottom;
   display: block;
   transform-origin: 50% 68%;
+  filter: contrast(1.08) saturate(1.2);
   animation: camPush 7.5s cubic-bezier(0.05,0,0.3,1) 0.6s both;
 }
 @keyframes camPush {
   from { transform: scale(1.0); }
   to   { transform: scale(1.11); }
-}
-.scene-blend {
-  position: absolute; top: 0; left: 0; right: 0;
-  height: 42%; z-index: 5; pointer-events: none;
-  background: linear-gradient(to bottom,
-    rgba(242,238,255,1)  0%,
-    rgba(242,238,255,0.8) 28%,
-    rgba(242,238,255,0)  100%);
 }
 
 /* ── HUD scan line ── */

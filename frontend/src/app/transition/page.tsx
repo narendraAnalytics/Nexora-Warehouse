@@ -166,7 +166,6 @@ export default function TransitionPage() {
       <div className="scene" ref={sceneRef}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={PANORAMA_URL} className="scene-img" alt="Nexora India Journey" />
-        <div className="scene-blend" />
         <div className="scan-line" />
         <div className="portal-glow" />
         <div className="road-lines">
