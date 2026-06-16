@@ -135,7 +135,7 @@ export default function HeroPage() {
         ))}
         {isSignedIn ? (
           <a
-            href="#"
+            href="/transition"
             className="no-underline font-bold text-base text-white rounded-[50px] px-11 py-[13px]"
             style={{ background: "linear-gradient(130deg,#3EE8C2,#18D8C3 55%,#A855F7)" }}
           >
@@ -362,7 +362,7 @@ export default function HeroPage() {
             <div className="flex items-center gap-[14px] mb-[46px] flex-wrap">
               {isSignedIn ? (
                 <a
-                  href="#"
+                  href="/transition"
                   className="inline-flex items-center gap-2 rounded-[50px] text-white font-bold
                     no-underline relative overflow-hidden cursor-pointer
                     transition-all duration-300
