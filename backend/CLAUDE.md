@@ -370,7 +370,7 @@ Manager approval required (via LangGraph interrupt) for:
 
 | Table | Purpose |
 |---|---|
-| `users` | Clerk-authenticated users with roles |
+| `users` | Clerk-authenticated users — columns: `id`, `clerk_id`, `email`, `full_name`, `role`, `is_active`, `created_at`, `updated_at`. No `warehouse_id` (dropped Phase 20). |
 | `warehouses` | 5 branch warehouses (Hyderabad, Bangalore, Chennai, Mumbai, Pune) |
 | `products` | Electronics catalog with categories |
 | `inventory` | Stock levels per product per warehouse |

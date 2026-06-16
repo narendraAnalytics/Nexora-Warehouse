@@ -29,7 +29,8 @@ Each folder has its own `CLAUDE.md` with full context. Always read the relevant 
 | Backend | Phase 17 — Render Deployment | ✅ Complete |
 | Frontend | Phase 18 — Hero Section + Vercel Deployment | ✅ Complete |
 | Frontend | Phase 19 — Clerk Auth Integration | ✅ Complete |
-| Next up | Phase 20 — Dashboard pages | ⏳ Pending |
+| Frontend | Phase 20 — Clerk ↔ Neon Lazy Sync | ✅ Complete |
+| Next up | Phase 21 — Dashboard pages | ⏳ Pending |
 
 ---
 
@@ -80,3 +81,6 @@ Hyderabad · Bangalore · Chennai · Mumbai · Pune
 - Next.js 16 uses `src/proxy.ts` NOT `src/middleware.ts` for middleware.
 - Never commit `.env` files.
 - Clerk auth: username enabled in Clerk dashboard (Require username ON). Use `useUser()` hook in client components.
+- Neon DB (`@neondatabase/serverless`): use tagged template literals — `` sql`SELECT ... WHERE id = ${id}` `` NOT `sql('string', [params])`.
+- `users` table: no `warehouse_id` column (dropped). Columns: `id`, `clerk_id`, `email`, `full_name`, `role`, `is_active`, `created_at`, `updated_at`.
+- Clerk→Neon sync: on login → `/api/auth/sync` → upserts user with `role='ceo'` → redirects to `/`.

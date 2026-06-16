@@ -10,7 +10,7 @@
 
 ## Current Status
 
-**Phase: 19 — Clerk Auth Integration COMPLETE**
+**Phase: 20 — Clerk ↔ Neon Lazy Sync COMPLETE**
 
 - ✅ Next.js 16 + React 19 + TypeScript scaffold
 - ✅ Tailwind v4 (CSS-first, no `tailwind.config.js`) + `@base-ui/react` + shadcn
@@ -21,7 +21,9 @@
 - ✅ **Deployed to Vercel: `https://nexorawarehouse.vercel.app`**
 - ✅ Nexora logo as favicon (`src/app/icon.png`) — default Next.js favicon removed
 - ✅ Clerk Auth (`@clerk/nextjs` v7.5.2) — login modal, navbar user state, sign-in/sign-up pages
-- ⏳ Dashboard pages — Phase 20
+- ✅ Neon DB wired — `@neondatabase/serverless` + raw SQL (no drizzle push — table owned by backend)
+- ✅ Lazy sync — on login → `/api/auth/sync` → upserts into `users` table with `role='ceo'` → redirects to `/`
+- ⏳ Dashboard pages — Phase 21
 - ⏳ API integration — backend live at `https://nexora-warehouse.onrender.com`
 
 ---
@@ -49,7 +51,7 @@ Known breakages already discovered:
 | Font | Plus Jakarta Sans | Google Fonts link, weights 400/500/600/700/800 only |
 | Images | Cloudinary CDN | Hostname configured in `next.config.ts` |
 | Auth | Clerk `^7.5.2` | ✅ Wired — `ClerkProvider` in `layout.tsx`, `useUser()` in `page.tsx`, `proxy.ts` middleware |
-| DB | Drizzle ORM + Neon | Not yet wired — schema TBD |
+| DB | `@neondatabase/serverless` | ✅ Wired — raw SQL via tagged template literals, no drizzle push (table owned by backend) |
 | Email | Resend + React Email | Not yet wired |
 | Background jobs | Inngest 4.5.1 | Mirrors backend event system |
 
@@ -118,13 +120,17 @@ frontend/
 │   │   │   └── page.tsx                  ← username collection (fallback, Clerk handles natively)
 │   │   ├── sign-in/[[...sign-in]]/
 │   │   │   └── page.tsx                  ← Clerk SignIn page (catch-all route)
-│   │   └── sign-up/[[...sign-up]]/
-│   │       └── page.tsx                  ← Clerk SignUp page (catch-all route)
+│   │   ├── sign-up/[[...sign-up]]/
+│   │   │   └── page.tsx                  ← Clerk SignUp page (catch-all route)
+│   │   └── api/auth/sync/
+│   │       └── route.ts                  ← GET: upsert Clerk user → Neon, redirect to /
 │   ├── components/
 │   │   └── ui/
 │   │       └── button.tsx                ← shadcn Button (base-ui/react)
 │   ├── lib/
-│   │   └── utils.ts                      ← cn() utility (clsx + tailwind-merge)
+│   │   ├── utils.ts                      ← cn() utility (clsx + tailwind-merge)
+│   │   ├── db.ts                         ← neon() SQL client (DATABASE_URL)
+│   │   └── auth.ts                       ← getOrCreateUser() lazy Clerk→Neon sync
 │   └── proxy.ts                          ← Clerk middleware (public route matcher)
 ├── next.config.ts                        ← Cloudinary remotePatterns
 ├── components.json                       ← shadcn CLI config
@@ -140,7 +146,9 @@ frontend/
 - Hero CTA + mobile overlay: also wrapped with `<SignInButton mode="modal">` when signed out
 - Clerk dashboard: **Require username ON** — username collected in Clerk modal during sign-up
 - Sign-in/sign-up pages at `/sign-in/[[...sign-in]]` and `/sign-up/[[...sign-up]]` (Nexora gradient background)
-- All auth redirects → `/` (hero page)
+- After sign-in/sign-up: force-redirects to `/api/auth/sync` (upserts user to Neon) then → `/`
+- `NEXT_PUBLIC_CLERK_SIGN_IN_FORCE_REDIRECT_URL=/api/auth/sync` — must be set in Vercel env vars
+- `NEXT_PUBLIC_CLERK_SIGN_UP_FORCE_REDIRECT_URL=/api/auth/sync` — must be set in Vercel env vars
 
 ### Clerk v7 Key Differences
 | Old | New (v7) |
