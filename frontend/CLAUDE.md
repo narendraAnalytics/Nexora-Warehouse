@@ -10,7 +10,7 @@
 
 ## Current Status
 
-**Phase: 20 — Clerk ↔ Neon Lazy Sync COMPLETE**
+**Phase: 20.5 — Transition Page + Placeholder Dashboard COMPLETE**
 
 - ✅ Next.js 16 + React 19 + TypeScript scaffold
 - ✅ Tailwind v4 (CSS-first, no `tailwind.config.js`) + `@base-ui/react` + shadcn
@@ -23,7 +23,9 @@
 - ✅ Clerk Auth (`@clerk/nextjs` v7.5.2) — login modal, navbar user state, sign-in/sign-up pages
 - ✅ Neon DB wired — `@neondatabase/serverless` + raw SQL (no drizzle push — table owned by backend)
 - ✅ Lazy sync — on login → `/api/auth/sync` → upserts into `users` table with `role='ceo'` → redirects to `/`
-- ⏳ Dashboard pages — Phase 21
+- ✅ Transition page (`/transition`) — 7-second cinematic loading screen, panorama fills full viewport, city pins, portal flash, auto-redirects to `/dashboard`
+- ✅ Placeholder dashboard (`/dashboard`) — KPI cards, branch table, "Phase 21 coming" banner, back-to-home button
+- ⏳ Full AI Dashboard — Phase 21
 - ⏳ API integration — backend live at `https://nexora-warehouse.onrender.com`
 
 ---
@@ -122,6 +124,11 @@ frontend/
 │   │   │   └── page.tsx                  ← Clerk SignIn page (catch-all route)
 │   │   ├── sign-up/[[...sign-up]]/
 │   │   │   └── page.tsx                  ← Clerk SignUp page (catch-all route)
+│   │   ├── transition/
+│   │   │   ├── page.tsx                  ← 7-sec cinematic loading screen (client component)
+│   │   │   └── transition.css            ← all keyframe animations, scoped to .page *
+│   │   ├── dashboard/
+│   │   │   └── page.tsx                  ← placeholder CEO dashboard, back-to-home button
 │   │   └── api/auth/sync/
 │   │       └── route.ts                  ← GET: upsert Clerk user → Neon, redirect to /
 │   ├── components/
@@ -147,6 +154,9 @@ frontend/
 - Clerk dashboard: **Require username ON** — username collected in Clerk modal during sign-up
 - Sign-in/sign-up pages at `/sign-in/[[...sign-in]]` and `/sign-up/[[...sign-up]]` (Nexora gradient background)
 - After sign-in/sign-up: force-redirects to `/api/auth/sync` (upserts user to Neon) then → `/`
+- Signed-in "Get Started" → `/transition` → 7-sec animation → `/dashboard`
+- **CSS bleed rule**: any page-level CSS reset (`* { margin:0 }`) MUST be scoped to `.page *` — plain `*` resets persist across client-side navigation and break other pages
+- **Transition layout rule**: `.scene` must be `position:absolute; inset:0` (full viewport), `.top` floats over it `position:absolute; top:0`. Never use a flex column layout or add a background gradient to `.page` — it creates a white band above the panorama
 - `NEXT_PUBLIC_CLERK_SIGN_IN_FORCE_REDIRECT_URL=/api/auth/sync` — must be set in Vercel env vars
 - `NEXT_PUBLIC_CLERK_SIGN_UP_FORCE_REDIRECT_URL=/api/auth/sync` — must be set in Vercel env vars
 
