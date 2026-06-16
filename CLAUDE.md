@@ -31,7 +31,8 @@ Each folder has its own `CLAUDE.md` with full context. Always read the relevant 
 | Frontend | Phase 19 — Clerk Auth Integration | ✅ Complete |
 | Frontend | Phase 20 — Clerk ↔ Neon Lazy Sync | ✅ Complete |
 | Frontend | Phase 20.5 — Transition Page + Placeholder Dashboard | ✅ Complete |
-| Next up | Phase 21 — Full AI Dashboard | ⏳ Pending |
+| Frontend | Phase 21 — Full AI Dashboard | ✅ Complete |
+| Next up | Phase 22 — WebSocket Real-Time / WhatsApp / Monitoring | ⏳ Pending |
 
 ---
 
@@ -86,5 +87,7 @@ Hyderabad · Bangalore · Chennai · Mumbai · Pune
 - `users` table: no `warehouse_id` column (dropped). Columns: `id`, `clerk_id`, `email`, `full_name`, `role`, `is_active`, `created_at`, `updated_at`.
 - Clerk→Neon sync: on login → `/api/auth/sync` → upserts user with `role='ceo'` → redirects to `/`.
 - Transition page (`/transition`): 7-second cinematic loading screen (panorama fills full viewport, `.scene` is `position:absolute inset:0`, `.top` floats over it). Never add a page background gradient or scene-blend overlay — it washes out the sky.
-- After transition → `/dashboard` (placeholder). Dashboard has "Back to Home" → `/`.
+- After transition → `/dashboard` (full AI dashboard — Phase 21 complete).
 - Page-scoped CSS resets: any `* { margin:0; padding:0 }` in a page CSS file MUST be scoped to `.page *` to prevent bleeding into other pages after client-side navigation.
+- Dashboard CSS scoped to `.nexora-dash` — all selectors prefixed, CSS vars defined on `.nexora-dash {}` not `:root`. Scrollable content area needs `flex: 1; min-height: 0; overflow-y: scroll` — omitting `min-height: 0` causes flexbox to expand past viewport and clips the scrollbar.
+- Clerk hydration rule: any `isSignedIn`-conditional JSX MUST be guarded by `isLoaded` → `{isLoaded && isSignedIn ? <authed/> : <signInBtn/>}`. Without `isLoaded`, SSR renders signed-out HTML but client renders signed-in HTML → hydration mismatch.

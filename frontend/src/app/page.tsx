@@ -133,7 +133,7 @@ export default function HeroPage() {
             {link}
           </a>
         ))}
-        {isSignedIn ? (
+        {isLoaded && isSignedIn ? (
           <a
             href="/transition"
             className="no-underline font-bold text-base text-white rounded-[50px] px-11 py-[13px]"
@@ -360,7 +360,7 @@ export default function HeroPage() {
 
             {/* CTA Row */}
             <div className="flex items-center gap-[14px] mb-[46px] flex-wrap">
-              {isSignedIn ? (
+              {isLoaded && isSignedIn ? (
                 <a
                   href="/transition"
                   className="inline-flex items-center gap-2 rounded-[50px] text-white font-bold

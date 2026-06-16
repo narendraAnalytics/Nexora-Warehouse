@@ -10,7 +10,7 @@
 
 ## Current Status
 
-**Phase: 20.5 — Transition Page + Placeholder Dashboard COMPLETE**
+**Phase: 21 — Full AI Dashboard COMPLETE**
 
 - ✅ Next.js 16 + React 19 + TypeScript scaffold
 - ✅ Tailwind v4 (CSS-first, no `tailwind.config.js`) + `@base-ui/react` + shadcn
@@ -24,9 +24,8 @@
 - ✅ Neon DB wired — `@neondatabase/serverless` + raw SQL (no drizzle push — table owned by backend)
 - ✅ Lazy sync — on login → `/api/auth/sync` → upserts into `users` table with `role='ceo'` → redirects to `/`
 - ✅ Transition page (`/transition`) — 7-second cinematic loading screen, panorama fills full viewport, city pins, portal flash, auto-redirects to `/dashboard`
-- ✅ Placeholder dashboard (`/dashboard`) — KPI cards, branch table, "Phase 21 coming" banner, back-to-home button
-- ⏳ Full AI Dashboard — Phase 21
-- ⏳ API integration — backend live at `https://nexora-warehouse.onrender.com`
+- ✅ Full AI Dashboard (`/dashboard`) — real Neon DB data, 6 API routes, Chart.js charts, skeleton loading, Cloudinary landmark images, India map 300px
+- ⏳ Phase 22 — WebSocket Real-Time, WhatsApp alerts, Monitoring
 
 ---
 
@@ -128,9 +127,18 @@ frontend/
 │   │   │   ├── page.tsx                  ← 7-sec cinematic loading screen (client component)
 │   │   │   └── transition.css            ← all keyframe animations, scoped to .page *
 │   │   ├── dashboard/
-│   │   │   └── page.tsx                  ← placeholder CEO dashboard, back-to-home button
-│   │   └── api/auth/sync/
-│   │       └── route.ts                  ← GET: upsert Clerk user → Neon, redirect to /
+│   │   │   ├── page.tsx                  ← full CEO dashboard (Phase 21), real Neon data, Chart.js
+│   │   │   └── dashboard.css             ← all dashboard styles, scoped to .nexora-dash
+│   │   └── api/
+│   │       ├── auth/sync/
+│   │       │   └── route.ts              ← GET: upsert Clerk user → Neon, redirect to /
+│   │       └── dashboard/
+│   │           ├── kpis/route.ts         ← inventory value, orders, shipments, OTD%, active products
+│   │           ├── branches/route.ts     ← per-warehouse inventory value, utilization%, OTD%
+│   │           ├── inventory-categories/route.ts ← SUM by category (donut + top products)
+│   │           ├── orders-trend/route.ts ← 8-day daily order counts (generate_series)
+│   │           ├── shipments-trend/route.ts ← 8-day daily dispatched_at counts
+│   │           └── alerts/route.ts       ← latest 4 rows from agent_logs
 │   ├── components/
 │   │   └── ui/
 │   │       └── button.tsx                ← shadcn Button (base-ui/react)
@@ -157,6 +165,9 @@ frontend/
 - Signed-in "Get Started" → `/transition` → 7-sec animation → `/dashboard`
 - **CSS bleed rule**: any page-level CSS reset (`* { margin:0 }`) MUST be scoped to `.page *` — plain `*` resets persist across client-side navigation and break other pages
 - **Transition layout rule**: `.scene` must be `position:absolute; inset:0` (full viewport), `.top` floats over it `position:absolute; top:0`. Never use a flex column layout or add a background gradient to `.page` — it creates a white band above the panorama
+- **Clerk hydration rule**: any `isSignedIn`-conditional JSX MUST be guarded by `isLoaded` — use `{isLoaded && isSignedIn ? <authed/> : <signInBtn/>}`. Without `isLoaded`, SSR renders signed-out HTML, client renders signed-in HTML → hydration mismatch error.
+- **Dashboard scroll rule**: scrollable content pane inside a flex column must use `flex: 1; min-height: 0; overflow-y: scroll`. Without `min-height: 0`, flexbox expands the div to its full natural height and the parent's `overflow: hidden` clips the scrollbar — page appears non-scrollable.
+- **Dashboard CSS scope**: all selectors prefixed with `.nexora-dash`, CSS vars on `.nexora-dash {}` not `:root`. Body overflow set/restored in `useEffect`.
 - `NEXT_PUBLIC_CLERK_SIGN_IN_FORCE_REDIRECT_URL=/api/auth/sync` — must be set in Vercel env vars
 - `NEXT_PUBLIC_CLERK_SIGN_UP_FORCE_REDIRECT_URL=/api/auth/sync` — must be set in Vercel env vars
 
