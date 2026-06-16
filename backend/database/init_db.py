@@ -74,7 +74,6 @@ async def init_db(pool: asyncpg.Pool) -> None:
                 email        TEXT NOT NULL UNIQUE,
                 full_name    TEXT,
                 role         TEXT NOT NULL DEFAULT 'operations',
-                warehouse_id UUID REFERENCES warehouses(id),
                 is_active    BOOLEAN DEFAULT TRUE,
                 created_at   TIMESTAMPTZ DEFAULT NOW(),
                 updated_at   TIMESTAMPTZ DEFAULT NOW()
