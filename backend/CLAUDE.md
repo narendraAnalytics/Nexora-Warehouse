@@ -45,6 +45,54 @@ Automated CEO briefings · Full profitability & inventory visibility · Improved
 
 **Phase: 18 — Next.js Frontend COMPLETE — Deployed at `https://nexorawarehouse.vercel.app`**
 
+### ⏳ Phase 23 — Procurement Phase 1: Purchase Requisition (CURRENT)
+
+Goal: Full PR lifecycle — generate → approve → reject → request-changes → resubmit
+
+**New files to create:**
+- `backend/schemas/pr_schemas.py` — PRItem, PRGenerateRequest, PRResponse, PRApprovalRequest (+ approver_role field)
+- `backend/tools/pr_tools.py` — 7 async @tool functions:
+    1. `get_low_stock_items(warehouse_id)` — inventory JOIN products WHERE qty ≤ reorder_point
+    2. `get_demand_forecast(warehouse_id, product_ids)` — avg_daily_sales * 30
+    3. `calculate_pr_quantities(low_stock_json, forecast_json)` — max(demand-current+reorder_qty, reorder_qty)
+    4. `_determine_approval_level(total_value)` [internal] — queries `approval_matrix` table (NOT hardcoded)
+    5. `create_purchase_requisition(...)` — sets workflow_id (WF-YYYY-{city}-{5digits}), escalation_deadline (NOW+48h), inserts to DB
+    6. `update_pr_status(pr_id, new_status, approved_by, approved_by_role, notes)` — transaction: UPDATE + INSERT pr_approval_history
+    7. `log_agent_event(agent_name, event_type, payload_json, ...)` — INSERT agent_events
+- `backend/api/procurement.py` — FastAPI router with 6 endpoints (prefix=/procurement)
+
+**Files to modify:**
+- `backend/database/init_db.py` — add 4 tables + FK:
+    - `purchase_requisitions` (workflow_id, inventory_analysis JSONB, forecast_analysis JSONB, procurement_analysis JSONB, attachments JSONB, escalation_deadline)
+    - `pr_approval_history` (audit trail, one row per action)
+    - `approval_matrix` (5 rows seeded: ≤5L→WAREHOUSE_MANAGER, 5-25L→OPERATIONS_HEAD, 25-50L→FINANCE_CONTROLLER, 50L-1Cr→CEO, >1Cr→CEO_AND_FINANCE)
+    - `agent_events` (workflow_id, pr_id, agent_name, event_type, payload JSONB)
+    - `ALTER TABLE purchase_orders ADD COLUMN IF NOT EXISTS pr_id UUID REFERENCES purchase_requisitions(id)`
+- `backend/agents/orchestrator.py` — add PR task routing rule (rule 8): route to ["inventory","demand_forecast","procurement"]; add log_agent_event calls in invoke_agents node
+- `backend/main.py` — `app.include_router(procurement_router)`
+
+**PR status flow:** `PENDING → APPROVED | REJECTED | CHANGES_REQUESTED → RESUBMITTED → PENDING`
+
+**API endpoints:**
+```
+POST /procurement/pr/generate          → orchestrator.ainvoke (Inventory→Demand→Procurement)
+GET  /procurement/pr?warehouse_id=&status=
+GET  /procurement/pr/{id}
+POST /procurement/pr/{id}/approve      → UPDATE APPROVED + pr_approval_history row
+POST /procurement/pr/{id}/reject       → UPDATE REJECTED + pr_approval_history row
+POST /procurement/pr/{id}/request-changes → UPDATE CHANGES_REQUESTED + history row
+POST /procurement/pr/{id}/resubmit    → UPDATE RESUBMITTED + history row (only if CHANGES_REQUESTED)
+```
+
+**Test commands:**
+```bash
+uv run python -c "from tools.pr_tools import create_purchase_requisition; print('OK')"
+uv run python -c "from api.procurement import router; print('OK')"
+curl -X POST http://localhost:8000/procurement/pr/generate -H "Content-Type: application/json" -d '{"warehouse_id":"<uuid>"}'
+```
+
+---
+
 ### ✅ Phase 17 — Render Production Deployment (COMPLETE)
 - ✅ Backend live at `https://nexora-warehouse.onrender.com`
 - ✅ All 13 routes verified: `/health`, `/docs`, `/openapi.json`, `/rag/*`, `/finance/query`,

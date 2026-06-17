@@ -10,6 +10,61 @@
 
 ## Current Status
 
+**Phase: 23 — Procurement Phase 1: PR UI (CURRENT)**
+
+### ⏳ Phase 23 — Procurement PR UI
+
+**New pages:**
+- `/procurement` — hub page (3 cards: PR active, PO/GRN upcoming)
+- `/procurement/pr` — PR list + warehouse selector + "Generate PR" button
+- `/procurement/pr/[id]` — PR detail + 3-button HITL panel + resubmit panel
+
+**New Next.js API routes** (all proxy to `process.env.BACKEND_URL ?? "https://nexora-warehouse.onrender.com"`):
+```
+GET  POST  /api/procurement/pr
+GET        /api/procurement/pr/[id]
+POST       /api/procurement/pr/[id]/approve
+POST       /api/procurement/pr/[id]/reject
+POST       /api/procurement/pr/[id]/request-changes
+POST       /api/procurement/pr/[id]/resubmit
+```
+
+**IMPORTANT — procurement calls FastAPI backend, NOT Neon directly** (PR generation requires LangGraph agents).
+
+**CSS:** scoped to `.nexora-procurement` — same pattern as `.nexora-dash`. No `:root` vars, no global resets.
+
+**Status badge colors:**
+- `PENDING` → amber `#f59e0b`
+- `APPROVED` → green `#10b981`
+- `REJECTED` → red `#ef4444`
+- `CHANGES_REQUESTED` → orange `#f97316`
+- `RESUBMITTED` → purple `#a78bfa`
+
+**PR detail page sections:**
+1. Header: PR# (monospace) + status badge + warehouse + date + escalation deadline (amber if <24h)
+2. Summary cards: Total Value (INR formatted) | Approval Level | Items Count
+3. Items table: SKU | Product | Current Stock (red if ≤ reorder_point) | Reorder Pt | Requested Qty | Unit Price | Total | Reason
+4. Agent Analysis: 3 JSON cards (inventory_analysis / forecast_analysis / procurement_analysis)
+5. Approval Panel (if status PENDING or RESUBMITTED): [✓ Approve] [✗ Reject] [↩ Request Changes]
+6. Changes Panel (if status CHANGES_REQUESTED): shows approval_notes + [↑ Resubmit PR]
+
+**File list to create:**
+```
+frontend/src/app/procurement/layout.tsx
+frontend/src/app/procurement/page.tsx
+frontend/src/app/procurement/pr/page.tsx
+frontend/src/app/procurement/pr/[id]/page.tsx
+frontend/src/app/procurement/procurement.module.css
+frontend/src/app/api/procurement/pr/route.ts
+frontend/src/app/api/procurement/pr/[id]/route.ts
+frontend/src/app/api/procurement/pr/[id]/approve/route.ts
+frontend/src/app/api/procurement/pr/[id]/reject/route.ts
+frontend/src/app/api/procurement/pr/[id]/request-changes/route.ts
+frontend/src/app/api/procurement/pr/[id]/resubmit/route.ts
+```
+
+---
+
 **Phase: 21 — Full AI Dashboard COMPLETE**
 
 - ✅ Next.js 16 + React 19 + TypeScript scaffold

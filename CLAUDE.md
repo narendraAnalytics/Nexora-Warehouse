@@ -32,6 +32,7 @@ Each folder has its own `CLAUDE.md` with full context. Always read the relevant 
 | Frontend | Phase 20 — Clerk ↔ Neon Lazy Sync | ✅ Complete |
 | Frontend | Phase 20.5 — Transition Page + Placeholder Dashboard | ✅ Complete |
 | Frontend | Phase 21 — Full AI Dashboard | ✅ Complete |
+| Backend + Frontend | Phase 23 — Procurement Phase 1: PR Lifecycle | ⏳ In Progress |
 | Next up | Phase 22 — WebSocket Real-Time / WhatsApp / Monitoring | ⏳ Pending |
 
 ---
@@ -91,3 +92,9 @@ Hyderabad · Bangalore · Chennai · Mumbai · Pune
 - Page-scoped CSS resets: any `* { margin:0; padding:0 }` in a page CSS file MUST be scoped to `.page *` to prevent bleeding into other pages after client-side navigation.
 - Dashboard CSS scoped to `.nexora-dash` — all selectors prefixed, CSS vars defined on `.nexora-dash {}` not `:root`. Scrollable content area needs `flex: 1; min-height: 0; overflow-y: scroll` — omitting `min-height: 0` causes flexbox to expand past viewport and clips the scrollbar.
 - Clerk hydration rule: any `isSignedIn`-conditional JSX MUST be guarded by `isLoaded` → `{isLoaded && isSignedIn ? <authed/> : <signInBtn/>}`. Without `isLoaded`, SSR renders signed-out HTML but client renders signed-in HTML → hydration mismatch.
+- Procurement CSS scoped to `.nexora-procurement` — all selectors prefixed, CSS vars on `.nexora-procurement {}` not `:root`. Same pattern as `.nexora-dash`.
+- PR status flow: `PENDING → APPROVED | REJECTED | CHANGES_REQUESTED → RESUBMITTED → PENDING`
+- Approval level from DB (`approval_matrix` table), not hardcoded. CEO can change thresholds without deployment.
+- PR number: `PR-2026-BLR-0001`. Workflow ID: `WF-2026-BLR-00042` (links PR→PO→GRN→Payment chain).
+- HITL escalation: 48h deadline on every PR, auto-escalate to next level if no action.
+- Orchestrator-first: `/procurement/pr/generate` routes through existing Orchestrator → Inventory → Demand → Procurement agents.
