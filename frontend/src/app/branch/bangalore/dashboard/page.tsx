@@ -26,6 +26,7 @@ interface KpiData {
   onTimeDelivery: number
   activeSKUs: number
   pendingPOs: number | null
+  openPRs: number | null
 }
 interface TrendPoint { day: string; count: number }
 interface CatPoint   { category: string; value: number }
@@ -200,6 +201,7 @@ export default function BangaloreDashboard() {
     { label: "On-Time Delivery",  value: kpis ? `${kpis.onTimeDelivery}%`       : "--", sub: "All-time OTD rate",           color: "#16A34A" },
     { label: "Active SKUs",       value: kpis ? fmtNum(kpis.activeSKUs)         : "--", sub: "Distinct active products",    color: "#D97706" },
     { label: "Pending POs",       value: kpis?.pendingPOs != null ? String(kpis.pendingPOs) : "--", sub: "Coming in Phase 22", color: "#DC2626" },
+    { label: "Open PRs",          value: kpis?.openPRs != null ? String(kpis.openPRs) : "--",   sub: "Pending approvals",  color: "#7C3AED" },
   ]
 
   // ── Alert severity ───────────────────────────────────────────────────────────
@@ -250,6 +252,8 @@ export default function BangaloreDashboard() {
               icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg> },
             { label: "Suppliers",              active: false, badge: null,
               icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> },
+            { label: "Procurement",            active: false, badge: null,
+              icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg> },
             { label: "AI Agents",              active: false, badge: null,
               icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="3" y="8" width="18" height="12" rx="2"/><path d="M12 2v4"/><circle cx="12" cy="6" r="2"/><circle cx="8" cy="14" r="1.5"/><circle cx="16" cy="14" r="1.5"/></svg> },
             { label: "Analytics",              active: false, badge: null,
@@ -520,6 +524,15 @@ export default function BangaloreDashboard() {
             {/* Quick Actions */}
             <div className="bd-qa-card">
               <div className="bd-qa-title">Quick Actions</div>
+              <button className="bd-qa-btn procurement" onClick={() => router.push("/procurement/pr")}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+                  <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                  <line x1="12" y1="13" x2="12" y2="17"/>
+                  <line x1="10" y1="15" x2="14" y2="15"/>
+                </svg>
+                Create PR
+              </button>
               <button className="bd-qa-btn primary">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
                   <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>

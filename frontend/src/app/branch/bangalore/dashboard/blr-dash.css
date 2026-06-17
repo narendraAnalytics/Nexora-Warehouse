@@ -415,7 +415,7 @@
 /* ── KPI STRIP ───────────────────────────────────── */
 .bd-kpi-strip {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(7, 1fr);
   gap: 12px;
 }
 
@@ -868,6 +868,12 @@
   background: rgba(22,163,74,0.08);
   border: 1px solid rgba(22,163,74,0.2);
   color: var(--bd-green);
+}
+
+.bd-qa-btn.procurement {
+  background: rgba(124,58,237,0.08);
+  border: 1px solid rgba(124,58,237,0.22);
+  color: #7C3AED;
 }
 
 /* ── SALES vs RETURNS BAR PAIR ───────────────────── */

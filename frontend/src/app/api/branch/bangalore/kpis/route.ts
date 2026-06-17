@@ -36,6 +36,15 @@ export async function GET() {
       FROM inventory i JOIN products p ON i.product_id = p.id
       WHERE i.warehouse_id = ${whId} AND p.is_active = true
     `
+    let openPRs: number | null = null
+    try {
+      const [prRow] = await sql`
+        SELECT COUNT(*)::int AS count FROM purchase_requisitions
+        WHERE warehouse_id = ${whId} AND status IN ('PENDING','RESUBMITTED')
+      `
+      openPRs = Number(prRow.count)
+    } catch { /* table not yet created — show -- */ }
+
     return NextResponse.json({
       inventoryValue: Number(invRow.inventory_value),
       totalOrders:    Number(ordRow.count),
@@ -43,6 +52,7 @@ export async function GET() {
       onTimeDelivery: Number(otdRow.pct),
       activeSKUs:     Number(skuRow.count),
       pendingPOs:     null,
+      openPRs,
     })
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 500 })
