@@ -454,6 +454,10 @@
 .nexora-dash .prod-v { font-size: 13px; font-weight: 800; color: var(--dark); margin-top: 2px; }
 .nexora-dash .prod-c > div:last-child { min-width: 0; }
 
+/* BANGALORE BRANCH HOVER */
+.nexora-dash .bri-blr { transition: background 0.18s; border-radius: 8px; }
+.nexora-dash .bri-blr:hover { background: rgba(234,88,12,0.06); }
+
 /* SKELETON SHIMMER */
 .nexora-dash .skel {
   background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);

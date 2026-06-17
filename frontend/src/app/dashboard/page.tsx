@@ -402,7 +402,7 @@ export default function DashboardPage() {
                           const barColor = b.utilizationPct >= 80 ? "#16a34a" : b.utilizationPct >= 60 ? "#d97706" : "#ef4444"
                           const isOp = b.otdPct >= 90
                           return (
-                            <div key={b.city} className="bri" style={{padding:"10px 0"}}>
+                            <div key={b.city} className={`bri${b.city === "Bangalore" ? " bri-blr" : ""}`} style={{padding:"10px 0", cursor: b.city === "Bangalore" ? "pointer" : "default"}} onClick={b.city === "Bangalore" ? () => router.push("/branch/bangalore") : undefined}>
                               <div className="br-thumb" style={{ background: cfg.bg }}>
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img src={cfg.img} style={{width:"100%",height:"100%",objectFit:"contain",objectPosition:"center",display:"block"}} alt={b.city}/>
