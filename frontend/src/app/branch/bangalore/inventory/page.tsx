@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { useRouter, useParams } from "next/navigation"
-import "../../../../inventory/inventory.css"
+import "../../../inventory/inventory.css"
 
 interface StockRow {
   sku:            string
