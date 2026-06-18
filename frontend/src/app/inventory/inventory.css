@@ -401,6 +401,185 @@
   gap: 10px;
 }
 
+/* ── Topbar scope tag ── */
+.ni-topbar-scope {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+  background: rgba(99,102,241,0.08);
+  border: 1px solid rgba(99,102,241,0.2);
+  border-radius: 20px;
+  padding: 2px 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* ── Info note ── */
+.ni-info-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #4f46e5;
+  background: rgba(99,102,241,0.06);
+  border: 1px solid rgba(99,102,241,0.15);
+  border-radius: var(--radius);
+  padding: 10px 16px;
+  margin-bottom: 20px;
+}
+
+/* ── Branches header ── */
+.ni-branches-header {
+  margin-bottom: 12px;
+}
+
+/* ── Branch cards grid ── */
+.ni-branches-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 1100px) {
+  .ni-branches-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (max-width: 700px) {
+  .ni-branches-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+.ni-branch-card {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.18s;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ni-branch-card:hover {
+  border-color: var(--accent);
+  box-shadow: 0 4px 16px rgba(99,102,241,0.1);
+  transform: translateY(-2px);
+}
+
+.ni-branch-card.selected {
+  border-color: var(--accent);
+  background: rgba(99,102,241,0.04);
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+}
+
+.ni-branch-card.empty {
+  opacity: 0.6;
+  cursor: default;
+}
+.ni-branch-card.empty:hover { transform: none; box-shadow: none; border-color: var(--border); }
+
+.ni-branch-card.loading {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.ni-branch-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ni-branch-city {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.ni-branch-health-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.ni-branch-health-dot.critical { background: var(--critical); box-shadow: 0 0 0 3px rgba(239,68,68,0.2); }
+.ni-branch-health-dot.low      { background: var(--low);      box-shadow: 0 0 0 3px rgba(245,158,11,0.2); }
+.ni-branch-health-dot.ok       { background: var(--ok);       box-shadow: 0 0 0 3px rgba(16,185,129,0.2); }
+.ni-branch-health-dot.empty    { background: var(--border); }
+
+.ni-branch-name {
+  font-size: 11px;
+  color: var(--ink-3);
+  font-weight: 500;
+  margin-top: -4px;
+}
+
+.ni-branch-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.ni-branch-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 6px 4px;
+  border-radius: 7px;
+  background: var(--surface-2);
+}
+
+.ni-branch-stat.critical { background: #fef2f2; }
+.ni-branch-stat.low      { background: #fffbeb; }
+.ni-branch-stat.ok       { background: #f0fdf4; }
+.ni-branch-stat.overstock{ background: #eff6ff; }
+
+.ni-branch-stat-val {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1;
+}
+.ni-branch-stat.critical .ni-branch-stat-val { color: var(--critical); }
+.ni-branch-stat.low      .ni-branch-stat-val { color: var(--low); }
+.ni-branch-stat.ok       .ni-branch-stat-val { color: var(--ok); }
+.ni-branch-stat.overstock .ni-branch-stat-val{ color: var(--overstock); }
+
+.ni-branch-stat-label {
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-3);
+  margin-top: 2px;
+}
+
+.ni-branch-total {
+  font-size: 11px;
+  color: var(--accent);
+  font-weight: 600;
+  text-align: right;
+  margin-top: 2px;
+}
+
+.ni-branch-empty-label {
+  font-size: 12px;
+  color: var(--ink-3);
+  text-align: center;
+  padding: 12px 0;
+}
+
+/* ── Drill-in panel ── */
+.ni-drill-panel {
+  background: var(--surface);
+  border: 1.5px solid var(--accent);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 24px rgba(99,102,241,0.08);
+}
+
 /* ── Skeleton loader ── */
 @keyframes ni-shimmer {
   0%   { background-position: -400px 0; }

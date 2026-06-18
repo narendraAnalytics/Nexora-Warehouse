@@ -4,28 +4,39 @@ import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import "./inventory.css"
 
-interface StockRow {
-  sku: string
-  name: string
-  category: string
-  brand: string
-  warehouse_name: string
-  warehouse_city: string
-  quantity: number
-  reserved_qty: number
-  reorder_point: number
-  reorder_qty: number
-  max_stock: number
-  avg_daily_sales: number
-  stock_status: "CRITICAL" | "LOW" | "OK" | "OVERSTOCK"
+interface BranchSummary {
+  warehouse_id: string
+  name:         string
+  city:         string
+  total:        number
+  critical:     number
+  low:          number
+  ok:           number
+  overstock:    number
 }
 
-interface AnalysisResult {
-  warehouse_id: string
-  analysis: string
-  reorder_alerts: object[]
-  low_stock_count: number
-  ran_at?: string
+interface Aggregated {
+  total:    number
+  critical: number
+  low:      number
+  ok:       number
+  overstock:number
+}
+
+interface StockRow {
+  sku:           string
+  name:          string
+  category:      string
+  brand:         string
+  warehouse_name:string
+  warehouse_city:string
+  quantity:      number
+  reserved_qty:  number
+  reorder_point: number
+  reorder_qty:   number
+  max_stock:     number
+  avg_daily_sales:number
+  stock_status: "CRITICAL" | "LOW" | "OK" | "OVERSTOCK"
 }
 
 const STATUS_CLS: Record<string, string> = {
@@ -35,11 +46,11 @@ const STATUS_CLS: Record<string, string> = {
   OVERSTOCK:"overstock",
 }
 
-const STATUS_DOT: Record<string, string> = {
-  CRITICAL: "●",
-  LOW:      "●",
-  OK:       "●",
-  OVERSTOCK:"●",
+function healthClass(b: BranchSummary) {
+  if (b.critical > 0) return "critical"
+  if (b.low > 0)      return "low"
+  if (b.total === 0)  return "empty"
+  return "ok"
 }
 
 function Skel({ w, h }: { w: number; h: number }) {
@@ -48,60 +59,48 @@ function Skel({ w, h }: { w: number; h: number }) {
 
 export default function InventoryPage() {
   const router = useRouter()
-  const [stock, setStock]           = useState<StockRow[]>([])
-  const [loading, setLoading]       = useState(true)
-  const [analyzing, setAnalyzing]   = useState(false)
-  const [analysis, setAnalysis]     = useState<AnalysisResult | null>(null)
-  const [toast, setToast]           = useState("")
 
-  const showToast = (msg: string) => {
-    setToast(msg)
-    setTimeout(() => setToast(""), 3500)
-  }
+  const [aggregated, setAggregated]     = useState<Aggregated | null>(null)
+  const [branches,   setBranches]       = useState<BranchSummary[]>([])
+  const [loading,    setLoading]        = useState(true)
 
-  const fetchStock = useCallback(async () => {
+  const [selectedBranch, setSelectedBranch] = useState<BranchSummary | null>(null)
+  const [drillStock,     setDrillStock]     = useState<StockRow[]>([])
+  const [drillLoading,   setDrillLoading]   = useState(false)
+
+  const fetchAll = useCallback(async () => {
     setLoading(true)
     try {
-      const res  = await fetch("/api/inventory/stock")
+      const res  = await fetch("/api/inventory/all-branches")
       const data = await res.json()
-      setStock(Array.isArray(data) ? data : [])
-    } catch {
-      showToast("Failed to load stock data")
+      setAggregated(data.aggregated)
+      setBranches(Array.isArray(data.branches) ? data.branches : [])
     } finally {
       setLoading(false)
     }
   }, [])
 
-  useEffect(() => { fetchStock() }, [fetchStock])
+  useEffect(() => { fetchAll() }, [fetchAll])
 
-  const runAnalysis = async () => {
-    setAnalyzing(true)
-    setAnalysis(null)
+  const selectBranch = async (b: BranchSummary) => {
+    if (selectedBranch?.warehouse_id === b.warehouse_id) {
+      setSelectedBranch(null)
+      setDrillStock([])
+      return
+    }
+    setSelectedBranch(b)
+    setDrillStock([])
+    setDrillLoading(true)
     try {
-      const res  = await fetch("/api/inventory/analyze", {
-        method:  "POST",
-        headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({}),
-      })
+      const res  = await fetch(`/api/inventory/stock?warehouse_id=${b.warehouse_id}`)
       const data = await res.json()
-      if (!res.ok) throw new Error(data.detail ?? "Analysis failed")
-      setAnalysis({ ...data, ran_at: new Date().toLocaleTimeString() })
-      showToast("Inventory analysis complete")
-      // Refresh stock table after agent run (agent may have updated agent_logs)
-      fetchStock()
-    } catch (err: unknown) {
-      showToast(err instanceof Error ? err.message : "Analysis failed")
+      setDrillStock(Array.isArray(data) ? data : [])
     } finally {
-      setAnalyzing(false)
+      setDrillLoading(false)
     }
   }
 
-  // Derived counts
-  const criticalCount  = stock.filter(r => r.stock_status === "CRITICAL").length
-  const lowCount       = stock.filter(r => r.stock_status === "LOW").length
-  const okCount        = stock.filter(r => r.stock_status === "OK").length
-  const overstockCount = stock.filter(r => r.stock_status === "OVERSTOCK").length
-  const hasLowStock    = criticalCount + lowCount > 0
+  const totalBranches = branches.filter(b => b.total > 0).length
 
   return (
     <div className="nexora-inventory">
@@ -117,9 +116,10 @@ export default function InventoryPage() {
             </svg>
             Inventory Intelligence
           </div>
+          <span className="ni-topbar-scope">All Branches</span>
         </div>
         <div className="ni-topbar-right">
-          <button className="ni-btn ni-btn-secondary" onClick={fetchStock} disabled={loading}>
+          <button className="ni-btn ni-btn-secondary" onClick={fetchAll} disabled={loading}>
             {loading ? <span className="ni-spinner dark" /> : "↻"} Refresh
           </button>
         </div>
@@ -131,195 +131,178 @@ export default function InventoryPage() {
         {/* KPI strip */}
         <div className="ni-kpis">
           <div className="ni-kpi">
-            <div className="ni-kpi-label">Total Products</div>
+            <div className="ni-kpi-label">Total SKUs (Network)</div>
             <div className="ni-kpi-val">
-              {loading ? <Skel w={40} h={28} /> : stock.length}
+              {loading ? <Skel w={40} h={28} /> : (aggregated?.total ?? 0)}
             </div>
           </div>
           <div className="ni-kpi">
-            <div className="ni-kpi-label">Critical</div>
-            <div className={`ni-kpi-val${criticalCount > 0 ? " critical" : ""}`}>
-              {loading ? <Skel w={32} h={28} /> : criticalCount}
+            <div className="ni-kpi-label">Critical (All Branches)</div>
+            <div className={`ni-kpi-val${(aggregated?.critical ?? 0) > 0 ? " critical" : ""}`}>
+              {loading ? <Skel w={32} h={28} /> : (aggregated?.critical ?? 0)}
             </div>
           </div>
           <div className="ni-kpi">
-            <div className="ni-kpi-label">Low Stock</div>
-            <div className={`ni-kpi-val${lowCount > 0 ? " low" : ""}`}>
-              {loading ? <Skel w={32} h={28} /> : lowCount}
+            <div className="ni-kpi-label">Low Stock (All Branches)</div>
+            <div className={`ni-kpi-val${(aggregated?.low ?? 0) > 0 ? " low" : ""}`}>
+              {loading ? <Skel w={32} h={28} /> : (aggregated?.low ?? 0)}
             </div>
           </div>
           <div className="ni-kpi">
             <div className="ni-kpi-label">OK / Overstock</div>
             <div className="ni-kpi-val ok">
-              {loading ? <Skel w={40} h={28} /> : `${okCount} / ${overstockCount}`}
+              {loading ? <Skel w={48} h={28} /> : `${aggregated?.ok ?? 0} / ${aggregated?.overstock ?? 0}`}
             </div>
           </div>
         </div>
 
-        {/* Stock table */}
-        <div className="ni-card">
-          <div className="ni-card-header">
-            <div>
-              <div className="ni-card-title">Stock Levels — Bangalore Warehouse</div>
-              <div className="ni-card-sub">Live data from inventory table. CRITICAL = at or below reorder point.</div>
+        {/* Info note */}
+        <div className="ni-info-note">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="2">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          Read-only view — {totalBranches} of 5 branches stocked. Purchase Requests are generated by branch managers from their branch dashboard.
+        </div>
+
+        {/* Branch cards grid */}
+        <div className="ni-branches-header">
+          <div className="ni-card-title">Branch Stock Health</div>
+          <div className="ni-card-sub">Click a branch to drill into its stock levels</div>
+        </div>
+
+        <div className="ni-branches-grid">
+          {loading ? (
+            Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="ni-branch-card loading">
+                <Skel w={120} h={16} />
+                <Skel w={80}  h={12} />
+                <Skel w={160} h={32} />
+              </div>
+            ))
+          ) : branches.length === 0 ? (
+            <div className="ni-empty" style={{ gridColumn: "1/-1" }}>
+              No active warehouses found.
             </div>
-          </div>
-          <div className="ni-table-wrap">
-            <table className="ni-table">
-              <thead>
-                <tr>
-                  <th>SKU</th>
-                  <th>Product</th>
-                  <th>Current Stock</th>
-                  <th>Reorder Point</th>
-                  <th>Safety Stock (Reorder Qty)</th>
-                  <th>Max Stock</th>
-                  <th>Avg Daily Sales</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {loading ? (
-                  Array.from({ length: 5 }).map((_, i) => (
-                    <tr key={i}>
-                      {Array.from({ length: 8 }).map((_, j) => (
-                        <td key={j}><Skel w={j === 1 ? 140 : 60} h={14} /></td>
-                      ))}
-                    </tr>
-                  ))
-                ) : stock.length === 0 ? (
-                  <tr>
-                    <td colSpan={8}>
-                      <div className="ni-empty">
-                        No inventory records found for this warehouse.<br/>
-                        Add products via the Product Master to populate inventory.
+          ) : (
+            branches.map(b => {
+              const hcls     = healthClass(b)
+              const isActive = selectedBranch?.warehouse_id === b.warehouse_id
+              return (
+                <div
+                  key={b.warehouse_id}
+                  className={`ni-branch-card${isActive ? " selected" : ""}${b.total === 0 ? " empty" : ""}`}
+                  onClick={() => selectBranch(b)}
+                >
+                  <div className="ni-branch-card-top">
+                    <div className="ni-branch-city">{b.city}</div>
+                    <div className={`ni-branch-health-dot ${hcls}`} />
+                  </div>
+                  <div className="ni-branch-name">{b.name}</div>
+                  {b.total === 0 ? (
+                    <div className="ni-branch-empty-label">No stock data</div>
+                  ) : (
+                    <div className="ni-branch-stats">
+                      <div className="ni-branch-stat critical">
+                        <span className="ni-branch-stat-val">{b.critical}</span>
+                        <span className="ni-branch-stat-label">Critical</span>
                       </div>
-                    </td>
-                  </tr>
-                ) : (
-                  stock.map((row) => {
-                    const cls = STATUS_CLS[row.stock_status] ?? "ok"
-                    return (
-                      <tr key={row.sku}>
-                        <td><span className="ni-sku">{row.sku}</span></td>
-                        <td>
-                          <div className="ni-product-name">{row.name}</div>
-                          <div className="ni-category">{row.category} · {row.brand}</div>
-                        </td>
-                        <td>
-                          <span className={`ni-qty ${cls}`}>{row.quantity}</span>
-                        </td>
-                        <td>{row.reorder_point}</td>
-                        <td>{row.reorder_qty}</td>
-                        <td>{row.max_stock}</td>
-                        <td>{row.avg_daily_sales}</td>
-                        <td>
-                          <span className={`ni-badge ${cls}`}>
-                            {STATUS_DOT[row.stock_status]} {row.stock_status}
-                          </span>
-                        </td>
-                      </tr>
-                    )
-                  })
-                )}
-              </tbody>
-            </table>
-          </div>
+                      <div className="ni-branch-stat low">
+                        <span className="ni-branch-stat-val">{b.low}</span>
+                        <span className="ni-branch-stat-label">Low</span>
+                      </div>
+                      <div className="ni-branch-stat ok">
+                        <span className="ni-branch-stat-val">{b.ok}</span>
+                        <span className="ni-branch-stat-label">OK</span>
+                      </div>
+                      <div className="ni-branch-stat overstock">
+                        <span className="ni-branch-stat-val">{b.overstock}</span>
+                        <span className="ni-branch-stat-label">Overstock</span>
+                      </div>
+                    </div>
+                  )}
+                  {b.total > 0 && (
+                    <div className="ni-branch-total">{b.total} SKUs · {isActive ? "hide ↑" : "view →"}</div>
+                  )}
+                </div>
+              )
+            })
+          )}
         </div>
 
-        {/* Analysis panel — shown after agent run */}
-        {analysis && (
-          <div className="ni-analysis-panel">
-            <div className="ni-analysis-header">
-              <div className="ni-analysis-title">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#818cf8" strokeWidth="2">
-                  <circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/>
-                </svg>
-                Inventory Analysis Report
+        {/* Drill-in panel */}
+        {selectedBranch && (
+          <div className="ni-drill-panel">
+            <div className="ni-card-header" style={{ padding: "16px 22px 14px" }}>
+              <div>
+                <div className="ni-card-title">
+                  Stock Levels — {selectedBranch.city} Warehouse
+                  <span className="ni-topbar-scope" style={{ marginLeft: 10 }}>Read-only</span>
+                </div>
+                <div className="ni-card-sub">CRITICAL = at or below reorder point</div>
               </div>
-              <div className="ni-analysis-meta">
-                {analysis.low_stock_count} reorder alert{analysis.low_stock_count !== 1 ? "s" : ""} · ran at {analysis.ran_at}
-              </div>
+              <button className="ni-btn ni-btn-secondary" style={{ padding: "6px 12px", fontSize: 13 }} onClick={() => { setSelectedBranch(null); setDrillStock([]) }}>
+                ✕ Close
+              </button>
             </div>
-            <div
-              className="ni-analysis-body"
-              dangerouslySetInnerHTML={{
-                __html: analysis.analysis
-                  .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-                  .replace(/^#{1,3} (.+)$/gm, "<strong>$1</strong>")
-                  .replace(/\n/g, "<br/>"),
-              }}
-            />
+
+            <div className="ni-table-wrap">
+              <table className="ni-table">
+                <thead>
+                  <tr>
+                    <th>SKU</th>
+                    <th>Product</th>
+                    <th>Current Stock</th>
+                    <th>Reorder Point</th>
+                    <th>Safety Stock</th>
+                    <th>Max Stock</th>
+                    <th>Avg Daily Sales</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {drillLoading ? (
+                    Array.from({ length: 5 }).map((_, i) => (
+                      <tr key={i}>
+                        {Array.from({ length: 8 }).map((_, j) => (
+                          <td key={j}><Skel w={j === 1 ? 140 : 60} h={14} /></td>
+                        ))}
+                      </tr>
+                    ))
+                  ) : drillStock.length === 0 ? (
+                    <tr>
+                      <td colSpan={8}>
+                        <div className="ni-empty">No inventory records for this warehouse.</div>
+                      </td>
+                    </tr>
+                  ) : (
+                    drillStock.map(row => {
+                      const cls = STATUS_CLS[row.stock_status] ?? "ok"
+                      return (
+                        <tr key={row.sku}>
+                          <td><span className="ni-sku">{row.sku}</span></td>
+                          <td>
+                            <div className="ni-product-name">{row.name}</div>
+                            <div className="ni-category">{row.category} · {row.brand}</div>
+                          </td>
+                          <td><span className={`ni-qty ${cls}`}>{row.quantity}</span></td>
+                          <td>{row.reorder_point}</td>
+                          <td>{row.reorder_qty}</td>
+                          <td>{row.max_stock}</td>
+                          <td>{row.avg_daily_sales}</td>
+                          <td><span className={`ni-badge ${cls}`}>● {row.stock_status}</span></td>
+                        </tr>
+                      )
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
 
       </div>
-
-      {/* Sticky action bar */}
-      <div className="ni-action-bar">
-        <div className="ni-action-bar-left">
-          {hasLowStock && !analyzing && !analysis && (
-            <>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2">
-                <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
-                <path d="M12 9v4"/><path d="M12 17h.01"/>
-              </svg>
-              {criticalCount} critical, {lowCount} low stock — run analysis to generate PR
-            </>
-          )}
-          {analysis && (
-            <>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2">
-                <polyline points="20 6 9 17 4 12"/>
-              </svg>
-              Analysis complete — {analysis.low_stock_count} items need reordering
-            </>
-          )}
-        </div>
-        <div className="ni-action-bar-right">
-          <button
-            className="ni-btn ni-btn-primary"
-            onClick={runAnalysis}
-            disabled={analyzing || loading}
-          >
-            {analyzing ? (
-              <><span className="ni-spinner" /> Running Analysis…</>
-            ) : (
-              <>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/>
-                </svg>
-                Run Inventory Analysis
-              </>
-            )}
-          </button>
-          <button
-            className="ni-btn ni-btn-success"
-            disabled={!analysis || analysis.low_stock_count === 0}
-            onClick={() => router.push("/procurement/pr")}
-          >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-              <polyline points="14 2 14 8 20 8"/>
-              <line x1="12" y1="18" x2="12" y2="12"/>
-              <line x1="9" y1="15" x2="15" y2="15"/>
-            </svg>
-            Generate PR
-          </button>
-        </div>
-      </div>
-
-      {/* Toast */}
-      {toast && (
-        <div style={{
-          position: "fixed", bottom: 80, left: "50%", transform: "translateX(-50%)",
-          background: "#0f172a", color: "#e2e8f0", padding: "10px 20px",
-          borderRadius: 8, fontSize: 13, fontWeight: 500, zIndex: 9999,
-          boxShadow: "0 4px 16px rgba(0,0,0,0.25)",
-        }}>
-          {toast}
-        </div>
-      )}
     </div>
   )
 }
