@@ -55,6 +55,7 @@ export default function HeroPage() {
   const { user, isSignedIn, isLoaded } = useUser();
   const [menuOpen, setMenuOpen] = useState(false);
   const [counts, setCounts] = useState([0, 0, 0, 0]);
+  const [mounted, setMounted] = useState(false);
   const hwRef = useRef<HTMLDivElement>(null);
 
   /* spawn floating particles */
@@ -105,6 +106,8 @@ export default function HeroPage() {
     return () => clearTimeout(timer);
   }, []);
 
+  useEffect(() => { setMounted(true); }, []);
+
   return (
     <>
       {/* ── MOBILE OVERLAY ── */}
@@ -133,7 +136,7 @@ export default function HeroPage() {
             {link}
           </a>
         ))}
-        {isLoaded && isSignedIn ? (
+        {mounted && isLoaded && isSignedIn ? (
           <a
             href="/transition"
             className="no-underline font-bold text-base text-white rounded-[50px] px-11 py-[13px]"
@@ -227,7 +230,7 @@ export default function HeroPage() {
             {/* Actions */}
             <div className="flex items-center gap-[9px] shrink-0">
               {/* Auth area */}
-              {isLoaded && (
+              {mounted && isLoaded && (
                 isSignedIn ? (
                   <div className="hidden md:flex items-center gap-[10px]">
                     <span
@@ -360,7 +363,7 @@ export default function HeroPage() {
 
             {/* CTA Row */}
             <div className="flex items-center gap-[14px] mb-[46px] flex-wrap">
-              {isLoaded && isSignedIn ? (
+              {mounted && isLoaded && isSignedIn ? (
                 <a
                   href="/transition"
                   className="inline-flex items-center gap-2 rounded-[50px] text-white font-bold
