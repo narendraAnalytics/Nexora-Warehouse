@@ -84,6 +84,14 @@ export async function PUT(
       `
     }
 
+    // Log notification to agent_logs
+    await sql`
+      INSERT INTO agent_logs (agent_name, action, output_summary, status)
+      VALUES ('product_master', 'product_updated',
+        ${`Product ${product.sku} — ${product.name} updated`},
+        'success')
+    `
+
     return NextResponse.json({
       id:          product.id,
       sku:         product.sku,
@@ -104,6 +112,15 @@ export async function DELETE(
     await sql`DELETE FROM inventory WHERE product_id = ${id}::uuid`
     const result = await sql`DELETE FROM products WHERE id = ${id}::uuid RETURNING id`
     if (result.length === 0) return NextResponse.json({ error: "Product not found" }, { status: 404 })
+
+    // Log notification to agent_logs
+    await sql`
+      INSERT INTO agent_logs (agent_name, action, output_summary, status)
+      VALUES ('product_master', 'product_deleted',
+        ${'Product removed from catalog and all warehouse inventories'},
+        'success')
+    `
+
     return NextResponse.json({ deleted: true, id: result[0].id })
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 500 })

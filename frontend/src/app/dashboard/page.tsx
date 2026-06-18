@@ -163,7 +163,7 @@ export default function DashboardPage() {
   const [categories, setCategories] = useState<Category[]>([])
   const [ordersTrend, setOrdersTrend] = useState<TrendPoint[]>([])
   const [shipmentsTrend, setShipmentsTrend] = useState<TrendPoint[]>([])
-  const [alerts, setAlerts] = useState<AlertItem[]>([])
+  const [alertData, setAlertData] = useState<{ count: number; alerts: AlertItem[] }>({ count: 0, alerts: [] })
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -194,7 +194,7 @@ export default function DashboardPage() {
         if (Array.isArray(c)) setCategories(c)
         if (Array.isArray(o)) setOrdersTrend(o)
         if (Array.isArray(s)) setShipmentsTrend(s)
-        if (Array.isArray(a)) setAlerts(a)
+        if (a && !a.error) setAlertData(a)
         setLoading(false)
       })
       .catch(() => setLoading(false))
@@ -253,7 +253,7 @@ export default function DashboardPage() {
               { icon: "products", label: "Products", href: "/products" },
               { icon: "suppliers", label: "Suppliers" },
               { icon: "analytics", label: "Analytics" },
-              { icon: "alerts", label: "Alerts & Notifications", badge: "12" },
+              { icon: "alerts", label: "Alerts & Notifications", badge: alertData.count > 0 ? String(alertData.count) : undefined },
               { icon: "reports", label: "Reports" },
               { icon: "settings", label: "Settings" },
             ].map((item) => (
@@ -305,7 +305,7 @@ export default function DashboardPage() {
                 </div>
                 <div className="tb-btn">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="2" strokeLinecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-                  <div className="n-badge">12</div>
+                  {alertData.count > 0 && <div className="n-badge">{alertData.count}</div>}
                 </div>
                 <div className="tb-btn">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="2" strokeLinecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
@@ -493,8 +493,8 @@ export default function DashboardPage() {
                           <Skel w={28} h={28} r={8}/><Skel w="80%" h={28} r={4} ml={9}/>
                         </div>
                       ))
-                    : alerts.length > 0
-                      ? alerts.map((a, i) => (
+                    : alertData.alerts.length > 0
+                      ? alertData.alerts.map((a, i) => (
                           <div key={i} className="al-i">
                             <AlertIcon type={alertIconType(a)}/>
                             <div className="al-t">{a.summary.length > 80 ? a.summary.slice(0,80)+"…" : a.summary}</div>

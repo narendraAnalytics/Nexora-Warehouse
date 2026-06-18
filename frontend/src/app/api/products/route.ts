@@ -81,6 +81,14 @@ export async function POST(req: NextRequest) {
       `
     }
 
+    // Log notification to agent_logs
+    await sql`
+      INSERT INTO agent_logs (agent_name, action, output_summary, status)
+      VALUES ('product_master', 'product_added',
+        ${`Product ${product.sku} — ${product.name} added to catalog`},
+        'success')
+    `
+
     return NextResponse.json({
       id:          product.id,
       sku:         product.sku,
