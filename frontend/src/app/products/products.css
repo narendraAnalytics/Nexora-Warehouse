@@ -734,3 +734,53 @@
   background: #fef3c7;
   color: #92400e;
 }
+
+/* ─── List action buttons ─────────────────────────────────────────────────────── */
+
+.nexora-products .np-btn-edit,
+.nexora-products .np-btn-delete,
+.nexora-products .np-btn-confirm,
+.nexora-products .np-btn-cancel {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 11px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  cursor: pointer;
+  transition: all 0.18s;
+  white-space: nowrap;
+}
+
+.nexora-products .np-btn-edit {
+  background: transparent;
+  border: 1.5px solid #6d28d9;
+  color: #6d28d9;
+}
+.nexora-products .np-btn-edit:hover { background: #ede9fe; }
+
+.nexora-products .np-btn-delete {
+  background: transparent;
+  border: 1.5px solid #ef4444;
+  color: #ef4444;
+}
+.nexora-products .np-btn-delete:hover { background: #fef2f2; }
+
+.nexora-products .np-btn-confirm {
+  background: #ef4444;
+  border: 1.5px solid #ef4444;
+  color: #fff;
+  padding: 4px 10px;
+}
+.nexora-products .np-btn-confirm:hover:not(:disabled) { background: #dc2626; border-color: #dc2626; }
+.nexora-products .np-btn-confirm:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.nexora-products .np-btn-cancel {
+  background: transparent;
+  border: 1.5px solid #d1d5db;
+  color: #6b7280;
+  padding: 4px 10px;
+}
+.nexora-products .np-btn-cancel:hover:not(:disabled) { background: #f3f4f6; }

@@ -18,9 +18,12 @@ interface Product {
 
 export default function ProductListPage() {
   const router = useRouter()
-  const [products, setProducts] = useState<Product[]>([])
-  const [stats, setStats]       = useState({ total: 0, active: 0, draft: 0 })
-  const [loading, setLoading]   = useState(true)
+  const [products, setProducts]           = useState<Product[]>([])
+  const [stats, setStats]                 = useState({ total: 0, active: 0, draft: 0 })
+  const [loading, setLoading]             = useState(true)
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+  const [deleting, setDeleting]           = useState(false)
+  const [toast, setToast]                 = useState<{ msg: string; type: "success" | "error" } | null>(null)
 
   useEffect(() => {
     Promise.all([
@@ -31,6 +34,28 @@ export default function ProductListPage() {
       if (!s.error)    setStats(s)
     }).catch(() => {}).finally(() => setLoading(false))
   }, [])
+
+  const showToast = (msg: string, type: "success" | "error") => {
+    setToast({ msg, type })
+    setTimeout(() => setToast(null), 3000)
+  }
+
+  const handleDelete = async (id: string, name: string) => {
+    setDeleting(true)
+    try {
+      const res  = await fetch(`/api/products/${id}`, { method: "DELETE" })
+      const data = await res.json()
+      if (data.error) throw new Error(data.error)
+      setProducts(prev => prev.filter(p => p.id !== id))
+      setStats(prev => ({ ...prev, total: prev.total - 1 }))
+      showToast(`"${name}" deleted`, "success")
+    } catch (e) {
+      showToast(String(e), "error")
+    } finally {
+      setDeleting(false)
+      setConfirmDeleteId(null)
+    }
+  }
 
   const fmt = (v: string | null) =>
     v ? `₹${Number(v).toLocaleString("en-IN", { minimumFractionDigits: 2 })}` : "—"
@@ -63,10 +88,10 @@ export default function ProductListPage() {
         <div>
           <span className="np-hero-tag">Product Master</span>
           <h2 className="np-hero-title">All Products</h2>
-          <p className="np-hero-desc">View and manage your complete product catalog across all warehouses</p>
+          <p className="np-hero-desc">View, update, and manage your complete product catalog across all warehouses</p>
         </div>
         <div className="np-hero-icons">
-          {["📦", "🏷️", "📊", "🔍"].map((icon, i) => (
+          {["📦", "✏️", "🗑️", "🔍"].map((icon, i) => (
             <div key={i} className="np-hero-icon">{icon}</div>
           ))}
         </div>
@@ -109,6 +134,7 @@ export default function ProductListPage() {
                     <th>UOM</th>
                     <th>Status</th>
                     <th>Added</th>
+                    <th style={{ textAlign: "center" }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -128,6 +154,42 @@ export default function ProductListPage() {
                       <td style={{ color: "#6b7280", fontSize: "12px" }}>
                         {new Date(p.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
                       </td>
+                      <td style={{ textAlign: "center", whiteSpace: "nowrap" }}>
+                        {confirmDeleteId === p.id ? (
+                          <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                            <span style={{ fontSize: "12px", color: "#dc2626", fontWeight: 600 }}>Delete?</span>
+                            <button
+                              className="np-btn-confirm"
+                              disabled={deleting}
+                              onClick={() => handleDelete(p.id, p.name)}
+                            >
+                              {deleting ? "…" : "Yes"}
+                            </button>
+                            <button
+                              className="np-btn-cancel"
+                              disabled={deleting}
+                              onClick={() => setConfirmDeleteId(null)}
+                            >
+                              No
+                            </button>
+                          </span>
+                        ) : (
+                          <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                            <button
+                              className="np-btn-edit"
+                              onClick={() => router.push(`/products/edit/${p.id}`)}
+                            >
+                              ✏️ Update
+                            </button>
+                            <button
+                              className="np-btn-delete"
+                              onClick={() => setConfirmDeleteId(p.id)}
+                            >
+                              🗑️ Delete
+                            </button>
+                          </span>
+                        )}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -137,6 +199,13 @@ export default function ProductListPage() {
         </div>
       </div>
 
+      {/* Toast */}
+      {toast && (
+        <div className={`np-toast np-toast-${toast.type}`}>
+          <span className="np-toast-icon">{toast.type === "success" ? "✓" : "✕"}</span>
+          {toast.msg}
+        </div>
+      )}
     </div>
   )
 }
