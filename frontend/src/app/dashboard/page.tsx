@@ -88,18 +88,20 @@ const BRANCH_CFG: Record<string, { img: string; dot: string; bg: string; state: 
 }
 
 const CAT_COLOR: Record<string, string> = {
-  "TVs": "#7C3AED",
-  "Mobiles & Tablets": "#FF6B35",
-  "Gaming Consoles": "#EC4899",
+  "Laptops":              "#3B82F6",
+  "Mobiles & Tablets":    "#FF6B35",
+  "TVs & Displays":       "#7C3AED",
+  "Gaming Consoles":      "#EC4899",
   "Networking Equipment": "#18D8C3",
-  "Accessories": "#D1D5DB",
+  "Accessories":          "#F59E0B",
 }
 const CAT_ICON: Record<string, string> = {
-  "TVs": "tv",
-  "Mobiles & Tablets": "mobile",
-  "Gaming Consoles": "gamepad",
+  "Laptops":              "laptop",
+  "Mobiles & Tablets":    "mobile",
+  "TVs & Displays":       "tv",
+  "Gaming Consoles":      "gamepad",
   "Networking Equipment": "network",
-  "Accessories": "headphones",
+  "Accessories":          "headphones",
 }
 
 const AGENTS = [
@@ -115,7 +117,8 @@ const AGENTS = [
 
 // ── Icon Components ────────────────────────────────────────────────────────
 function CatIcon({ type, color }: { type: string; color: string }) {
-  const s = color === "#D1D5DB" ? "#6B7280" : color
+  const s = color
+  if (type === "laptop") return <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={s} strokeWidth="1.8" strokeLinecap="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M2 20h20"/></svg>
   if (type === "tv") return <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={s} strokeWidth="1.8" strokeLinecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
   if (type === "mobile") return <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={s} strokeWidth="1.8" strokeLinecap="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
   if (type === "gamepad") return <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={s} strokeWidth="1.8" strokeLinecap="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg>
