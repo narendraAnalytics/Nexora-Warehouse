@@ -12,6 +12,35 @@
 
 **Phase: 23 — Procurement Phase 1: PR UI (CURRENT)**
 
+### ✅ Phase 21.5 — Product Master / Add Product Page (COMPLETE)
+
+**Pages created:**
+- `/products` — Add Product form (CEO adds products to the master catalog)
+
+**Files created:**
+```
+frontend/src/app/products/page.tsx           ← "use client", Clerk useUser, 4 form sections, sticky layout
+frontend/src/app/products/products.css       ← scoped to .nexora-products, sticky topbar + action bar
+frontend/src/app/api/products/stats/route.ts ← GET: COUNT total/active/draft from backend products table
+frontend/src/app/api/products/route.ts       ← POST: upsert product + inventory rows for all warehouses
+```
+
+**Key rules for this page:**
+- CSS scoped to `.nexora-products` — vars on `.nexora-products {}`, reset on `.nexora-products *`
+- Layout: `min-height: 100vh; display: block` on root, `position: sticky; top/bottom: 0` for topbar/action bar — never use `height: 100vh + overflow: hidden` (collapses form fields)
+- Right column: `position: sticky; top: 80px` so panels follow scroll
+- All `value={form.field}` props use `?? ""` fallback — React 19 concurrent mode can briefly render before useState settles → "uncontrolled→controlled" warning without fallback
+- `createdBy` guarded by `isLoaded` to prevent Clerk hydration mismatch
+- Safari: `-webkit-backdrop-filter` before `backdrop-filter` on glassmorphism elements
+
+**API schema — writes to backend `products` table (NOT a separate frontend table):**
+- Uses `name` (not `product_name`), UUID `id`, `unit_price` (from MRP), `unit_of_measure` (from UOM)
+- After product insert → upserts `inventory` row for **every active warehouse** dynamically (`SELECT id FROM warehouses WHERE is_active = TRUE`) — no hardcoded warehouse UUIDs
+- `quantity` seeded from `safetyStock` field; `reorder_qty = reorderPoint × 2`; `max_stock = reorderPoint × 4`
+- Dashboard "Products" nav wired to `router.push('/products')` in `dashboard/page.tsx`
+
+---
+
 ### ⏳ Phase 23 — Procurement PR UI
 
 **New pages:**

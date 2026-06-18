@@ -32,6 +32,7 @@ Each folder has its own `CLAUDE.md` with full context. Always read the relevant 
 | Frontend | Phase 20 — Clerk ↔ Neon Lazy Sync | ✅ Complete |
 | Frontend | Phase 20.5 — Transition Page + Placeholder Dashboard | ✅ Complete |
 | Frontend | Phase 21 — Full AI Dashboard | ✅ Complete |
+| Frontend | Phase 21.5 — Product Master (Add Product Page) | ✅ Complete |
 | Backend + Frontend | Phase 23 — Procurement Phase 1: PR Lifecycle | ⏳ In Progress |
 | Next up | Phase 22 — WebSocket Real-Time / WhatsApp / Monitoring | ⏳ Pending |
 
@@ -93,6 +94,11 @@ Hyderabad · Bangalore · Chennai · Mumbai · Pune
 - Dashboard CSS scoped to `.nexora-dash` — all selectors prefixed, CSS vars defined on `.nexora-dash {}` not `:root`. Scrollable content area needs `flex: 1; min-height: 0; overflow-y: scroll` — omitting `min-height: 0` causes flexbox to expand past viewport and clips the scrollbar.
 - Clerk hydration rule: any `isSignedIn`-conditional JSX MUST be guarded by `isLoaded` → `{isLoaded && isSignedIn ? <authed/> : <signInBtn/>}`. Without `isLoaded`, SSR renders signed-out HTML but client renders signed-in HTML → hydration mismatch.
 - Procurement CSS scoped to `.nexora-procurement` — all selectors prefixed, CSS vars on `.nexora-procurement {}` not `:root`. Same pattern as `.nexora-dash`.
+- Products CSS scoped to `.nexora-products` — same scoping pattern. Sticky topbar + action bar (`position: sticky; top/bottom: 0`), natural scroll root (`min-height: 100vh; display: block`).
+- Products page controlled inputs: all `value={form.field}` props must use `?? ""` fallback — React 19 concurrent mode can render before useState settles, causing "uncontrolled→controlled" warnings without the fallback.
+- Products API schema: frontend `/api/products` writes to the **backend** `products` table schema — `name` (not `product_name`), UUID `id`, `unit_price`, `unit_of_measure`. After product save, auto-upserts `inventory` row for **all active warehouses** (`SELECT id FROM warehouses WHERE is_active = TRUE`).
+- Backend `products` table columns (owned by `init_db.py`): `id UUID`, `sku`, `name`, `category`, `brand`, `description`, `unit_price`, `unit_cost`, `unit_of_measure`, `weight_kg`, `is_active`. Do NOT add `product_name` — that was the old frontend-only schema.
+- Bangalore warehouse UUID: `531e5c42-e4a1-4db0-a35c-a434f3b94344` (Neon DB, seeded in Phase 1).
 - PR status flow: `PENDING → APPROVED | REJECTED | CHANGES_REQUESTED → RESUBMITTED → PENDING`
 - Approval level from DB (`approval_matrix` table), not hardcoded. CEO can change thresholds without deployment.
 - PR number: `PR-2026-BLR-0001`. Workflow ID: `WF-2026-BLR-00042` (links PR→PO→GRN→Payment chain).

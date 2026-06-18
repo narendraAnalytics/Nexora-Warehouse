@@ -250,14 +250,19 @@ export default function DashboardPage() {
               { icon: "inventory", label: "Inventory" },
               { icon: "orders", label: "Orders" },
               { icon: "shipments", label: "Shipments" },
-              { icon: "products", label: "Products" },
+              { icon: "products", label: "Products", href: "/products" },
               { icon: "suppliers", label: "Suppliers" },
               { icon: "analytics", label: "Analytics" },
               { icon: "alerts", label: "Alerts & Notifications", badge: "12" },
               { icon: "reports", label: "Reports" },
               { icon: "settings", label: "Settings" },
             ].map((item) => (
-              <a key={item.label} className={`nav-a${item.active ? " on" : ""}`}>
+              <a
+                key={item.label}
+                className={`nav-a${item.active ? " on" : ""}`}
+                onClick={() => item.href && router.push(item.href)}
+                style={item.href ? { cursor: "pointer" } : undefined}
+              >
                 <SidebarIcon name={item.icon}/>
                 {item.label}
                 {item.badge && <span className="nb">{item.badge}</span>}
