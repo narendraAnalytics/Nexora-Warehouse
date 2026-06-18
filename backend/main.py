@@ -28,6 +28,7 @@ from api.knowledge import router as knowledge_router
 from api.communication import router as communication_router
 from api.ceo import router as ceo_router
 from api.orchestrator import router as orchestrator_router
+from api.inventory import router as inventory_router
 from events import inngest_client, create_inngest_functions
 from inngest.fast_api import serve as inngest_serve
 
@@ -138,6 +139,7 @@ app.include_router(knowledge_router, prefix="/knowledge", tags=["Knowledge"])
 app.include_router(communication_router, prefix="/communication", tags=["Communication"])
 app.include_router(ceo_router, prefix="/ceo", tags=["CEO"])
 app.include_router(orchestrator_router, prefix="/orchestrator", tags=["Orchestrator"])
+app.include_router(inventory_router, prefix="/inventory", tags=["Inventory"])
 
 
 @app.get("/health", tags=["System"])

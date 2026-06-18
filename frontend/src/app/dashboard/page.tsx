@@ -250,7 +250,7 @@ export default function DashboardPage() {
             {[
               { icon: "dashboard", label: "Dashboard", active: true },
               { icon: "branches", label: "Branches / Warehouses" },
-              { icon: "inventory", label: "Inventory" },
+              { icon: "inventory", label: "Inventory", href: "/inventory" },
               { icon: "orders", label: "Orders" },
               { icon: "shipments", label: "Shipments" },
               { icon: "products", label: "Products", href: "/products" },
