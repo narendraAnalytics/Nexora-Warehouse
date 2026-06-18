@@ -35,6 +35,32 @@ const STATUS_CLS: Record<string, string> = {
   OVERSTOCK:"overstock",
 }
 
+function parseAnalysis(text: string) {
+  return text.split(/\n\n+/).map(block => {
+    const [header, ...rest] = block.split("\n")
+    const dashIdx = header.indexOf(" — ")
+    return {
+      title:    dashIdx > -1 ? header.slice(0, dashIdx).trim() : header.trim(),
+      subtitle: dashIdx > -1 ? header.slice(dashIdx + 3).trim() : "",
+      lines:    rest.filter(Boolean),
+    }
+  }).filter(s => s.title)
+}
+
+function slug(title: string) {
+  if (title.includes("REORDER"))   return "reorder"
+  if (title.includes("OVERSTOCK")) return "overstock"
+  if (title.includes("TRANSFER"))  return "transfer"
+  return "summary"
+}
+
+function sectionIcon(title: string) {
+  if (title.includes("REORDER"))   return "⚠️"
+  if (title.includes("OVERSTOCK")) return "📦"
+  if (title.includes("TRANSFER"))  return "↔️"
+  return "📊"
+}
+
 const WAREHOUSE_IDS: Record<string, string> = {
   bangalore: "531e5c42-e4a1-4db0-a35c-a434f3b94344",
 }
@@ -225,27 +251,38 @@ export default function BranchInventoryPage() {
 
         {/* Analysis panel */}
         {analysis && (
-          <div className="ni-analysis-panel">
-            <div className="ni-analysis-header">
-              <div className="ni-analysis-title">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#818cf8" strokeWidth="2">
-                  <circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/>
+          <div className="ni-analysis-wrap">
+            <div className="ni-analysis-topbar">
+              <div className="ni-analysis-badge">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/>
                 </svg>
-                Inventory Analysis Report — {branchLabel}
+                AI Analysis
               </div>
-              <div className="ni-analysis-meta">
+              <span className="ni-analysis-branch">Inventory Report — {branchLabel}</span>
+              <span className="ni-analysis-time">
                 {analysis.low_stock_count} reorder alert{analysis.low_stock_count !== 1 ? "s" : ""} · ran at {analysis.ran_at}
-              </div>
+              </span>
             </div>
-            <div
-              className="ni-analysis-body"
-              dangerouslySetInnerHTML={{
-                __html: analysis.analysis
-                  .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-                  .replace(/^#{1,3} (.+)$/gm, "<strong>$1</strong>")
-                  .replace(/\n/g, "<br/>"),
-              }}
-            />
+            <div className="ni-analysis-grid">
+              {parseAnalysis(analysis.analysis).map(sec => (
+                <div key={sec.title} className={`ni-sec-card ni-sec-${slug(sec.title)}`}>
+                  <div className="ni-sec-header">
+                    <span className="ni-sec-icon">{sectionIcon(sec.title)}</span>
+                    <div>
+                      <div className="ni-sec-title">{sec.title}</div>
+                      {sec.subtitle && <div className="ni-sec-sub">{sec.subtitle}</div>}
+                    </div>
+                  </div>
+                  <ul className="ni-sec-list">
+                    {sec.lines.length > 0
+                      ? sec.lines.map((line, i) => <li key={i}>{line}</li>)
+                      : <li className="ni-sec-none">None</li>
+                    }
+                  </ul>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
