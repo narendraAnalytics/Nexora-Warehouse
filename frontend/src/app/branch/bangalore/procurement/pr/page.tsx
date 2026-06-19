@@ -358,6 +358,8 @@ export default function BranchPRPage() {
                         <input
                           type="number"
                           min={1}
+                          title={`Manager quantity for ${it.name}`}
+                          aria-label={`Manager quantity for ${it.name}`}
                           className={`pr-qty-input${it.manager_qty !== it.agent_suggested_qty && !pr ? " pr-qty-changed" : ""}`}
                           value={it.manager_qty ?? ""}
                           disabled={!!pr}
@@ -392,10 +394,10 @@ export default function BranchPRPage() {
                       <td className="center" style={{ color: "var(--muted)", fontSize: 11 }}>—</td>
                       <td className="center" style={{ color: "var(--muted)", fontSize: 11 }}>—</td>
                       <td className="center">
-                        <input type="number" min={1} className="pr-qty-input" placeholder="Qty" value={newRow.manager_qty} onChange={e => setNewRow(r => ({ ...r, manager_qty: e.target.value }))} />
+                        <input type="number" min={1} title="Quantity to order" aria-label="Quantity to order" className="pr-qty-input" placeholder="Qty" value={newRow.manager_qty} onChange={e => setNewRow(r => ({ ...r, manager_qty: e.target.value }))} />
                       </td>
                       <td className="right">
-                        <input type="number" min={0} className="pr-qty-input" placeholder="₹ Cost" style={{ width: 80 }} value={newRow.unit_cost} onChange={e => setNewRow(r => ({ ...r, unit_cost: e.target.value }))} />
+                        <input type="number" min={0} title="Unit cost in rupees" aria-label="Unit cost in rupees" className="pr-qty-input" placeholder="₹ Cost" style={{ width: 80 }} value={newRow.unit_cost} onChange={e => setNewRow(r => ({ ...r, unit_cost: e.target.value }))} />
                       </td>
                       <td className="right" style={{ color: "var(--muted)", fontSize: 11 }}>
                         {newRow.manager_qty && newRow.unit_cost ? formatINR(parseFloat(newRow.unit_cost) * parseInt(newRow.manager_qty)) : "—"}
@@ -403,7 +405,7 @@ export default function BranchPRPage() {
                       <td>
                         <div style={{ display: "flex", gap: 4 }}>
                           <button className="pr-add-confirm-btn" onClick={confirmAddRow}>Add</button>
-                          <button className="pr-remove-btn" onClick={() => { setAddingRow(false); setNewRow(BLANK_NEW_ROW) }}>
+                          <button className="pr-remove-btn" title="Cancel adding item" aria-label="Cancel adding item" onClick={() => { setAddingRow(false); setNewRow(BLANK_NEW_ROW) }}>
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                           </button>
                         </div>
