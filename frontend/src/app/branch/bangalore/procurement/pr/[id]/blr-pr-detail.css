@@ -384,3 +384,7 @@
   animation: prd-spin .7s linear infinite;
 }
 @keyframes prd-spin { to { transform: rotate(360deg); } }
+@keyframes prd-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: .35; transform: scale(.65); }
+}

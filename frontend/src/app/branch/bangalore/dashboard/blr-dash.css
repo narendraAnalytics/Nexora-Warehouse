@@ -387,6 +387,41 @@
   transform: translateY(-1px);
 }
 
+/* ── Procurement Requests card ── */
+.bd-pr-status-card { margin-bottom: 0; }
+.bd-clink {
+  font-size: 10px; font-weight: 700; color: var(--bd-orange);
+  background: none; border: none; cursor: pointer; padding: 0;
+  font-family: inherit;
+}
+.bd-clink:hover { text-decoration: underline; }
+.bd-pr-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid rgba(234,88,12,.08);
+  cursor: pointer;
+  transition: background .12s;
+  border-radius: 6px;
+}
+.bd-pr-row:last-child { border-bottom: none; }
+.bd-pr-row:hover { background: rgba(234,88,12,.04); }
+.bd-pr-left { flex: 1; min-width: 0; }
+.bd-pr-right { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+.bd-pr-num { font-size: 11px; font-weight: 800; font-family: monospace; color: #1A1035; }
+.bd-pr-val { font-size: 10px; color: #6B7280; margin-top: 1px; }
+.bd-pr-badge {
+  font-size: 9px; font-weight: 700; padding: 2px 8px;
+  border-radius: 10px; white-space: nowrap;
+}
+.bd-pr-badge.APPROVED          { background: rgba(22,163,74,.12);  color: #15803d; }
+.bd-pr-badge.PENDING           { background: rgba(245,158,11,.12); color: #b45309; }
+.bd-pr-badge.FINANCE_APPROVED  { background: rgba(167,139,250,.15); color: #7c3aed; }
+.bd-pr-badge.REJECTED          { background: rgba(220,38,38,.12);  color: #b91c1c; }
+.bd-pr-badge.CHANGES_REQUESTED { background: rgba(249,115,22,.12); color: #c2410c; }
+.bd-pr-badge.RESUBMITTED       { background: rgba(167,139,250,.12); color: #7c3aed; }
+.bd-pr-next { font-size: 9px; color: #0D9488; font-weight: 700; }
+.bd-pr-empty { font-size: 11px; color: #9CA3AF; padding: 8px 0; }
+
 /* ── BODY LAYOUT ─────────────────────────────────── */
 .bd-body {
   flex: 1;

@@ -31,6 +31,7 @@ interface KpiData {
 interface TrendPoint { day: string; count: number }
 interface CatPoint   { category: string; value: number }
 interface AlertItem  { agentName: string; action: string; summary: string; status: string; createdAt: string }
+interface PRStatus   { id: string; pr_number: string; status: string; total_estimated_value: number; escalation_deadline: string; created_at: string }
 
 // ── Static (design elements, not data) ───────────────────────────────────────
 const CAT_COLORS = ["#EA580C", "#F59E0B", "#0D9488", "#16A34A", "#D97706", "#DC2626"]
@@ -124,6 +125,7 @@ export default function BangaloreDashboard() {
   const [ordTrend, setOrdTrend] = useState<TrendPoint[]>([])
   const [cats,     setCats]     = useState<CatPoint[]>([])
   const [alerts,   setAlerts]   = useState<AlertItem[]>([])
+  const [prs,      setPRs]      = useState<PRStatus[]>([])
   const [loading,  setLoading]  = useState(true)
 
   useEffect(() => {
@@ -138,11 +140,13 @@ export default function BangaloreDashboard() {
       fetch("/api/branch/bangalore/orders-trend").then(r => r.json()),
       fetch("/api/branch/bangalore/inventory-categories").then(r => r.json()),
       fetch("/api/dashboard/alerts").then(r => r.json()),
-    ]).then(([k, o, c, a]) => {
+      fetch("/api/procurement/pr?warehouse_id=531e5c42-e4a1-4db0-a35c-a434f3b94344").then(r => r.json()).catch(() => []),
+    ]).then(([k, o, c, a, p]) => {
       setKpis(k)
       setOrdTrend(Array.isArray(o) ? o : [])
       setCats(Array.isArray(c) ? c : [])
       setAlerts(Array.isArray(a) ? a : [])
+      setPRs(Array.isArray(p) ? p.slice(0, 5) : [])
       setLoading(false)
     }).catch(() => setLoading(false))
   }, [])
@@ -524,6 +528,38 @@ export default function BangaloreDashboard() {
                   <span className="bd-agent-status">Active</span>
                 </div>
               ))}
+            </div>
+
+            {/* Procurement Requests */}
+            <div className="bd-card bd-pr-status-card">
+              <div className="bd-ch">
+                <span className="bd-ct">Procurement Requests</span>
+                <button className="bd-clink" onClick={() => router.push("/branch/bangalore/procurement/pr")}>New PR →</button>
+              </div>
+              {loading ? (
+                <><Skel h={38}/><Skel h={38}/></>
+              ) : prs.length === 0 ? (
+                <div className="bd-pr-empty">No PRs yet — generate one from Inventory.</div>
+              ) : (
+                prs.map(pr => {
+                  const val = pr.total_estimated_value
+                  const valStr = val >= 1e7 ? `₹${(val/1e7).toFixed(2)} Cr` : val >= 1e5 ? `₹${(val/1e5).toFixed(1)}L` : `₹${Math.round(val).toLocaleString("en-IN")}`
+                  return (
+                    <div key={pr.id} className="bd-pr-row" onClick={() => router.push(`/branch/bangalore/procurement/pr/${pr.id}`)}>
+                      <div className="bd-pr-left">
+                        <div className="bd-pr-num">{pr.pr_number}</div>
+                        <div className="bd-pr-val">{valStr}</div>
+                      </div>
+                      <div className="bd-pr-right">
+                        <span className={`bd-pr-badge ${pr.status}`}>{pr.status.replace(/_/g, " ")}</span>
+                        {pr.status === "APPROVED" && <div className="bd-pr-next">▶ Supplier Risk Agent</div>}
+                        {pr.status === "FINANCE_APPROVED" && <div className="bd-pr-next">Awaiting CEO approval</div>}
+                        {pr.status === "PENDING" && <div className="bd-pr-next">Awaiting Finance review</div>}
+                      </div>
+                    </div>
+                  )
+                })
+              )}
             </div>
 
             {/* Quick Actions */}

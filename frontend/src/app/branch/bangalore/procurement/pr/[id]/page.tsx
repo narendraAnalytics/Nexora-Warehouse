@@ -494,25 +494,47 @@ export default function BranchPRDetailPage() {
             </div>
           )}
 
-          {/* Approved / Rejected badge */}
-          {(pr.status === "APPROVED" || pr.status === "REJECTED") && (
-            <div className="prd-card" style={{ textAlign: "center", padding: 20 }}>
-              <div className={`prd-status-badge ${pr.status}`} style={{ fontSize: 13, padding: "8px 18px", display: "inline-flex" }}>
-                {pr.status === "APPROVED" ? "✓ Fully Approved" : "✗ Rejected"}
+          {/* APPROVED — next-steps workflow */}
+          {pr.status === "APPROVED" && (
+            <div className="prd-card">
+              <div style={{ textAlign: "center", marginBottom: 16 }}>
+                <div className="prd-status-badge APPROVED" style={{ fontSize: 13, padding: "8px 18px", display: "inline-flex" }}>
+                  ✓ CEO Approved
+                </div>
+                {pr.approved_by && (
+                  <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 6 }}>
+                    by {pr.approved_by} · {pr.approved_by_role?.replace(/_/g, " ")}
+                  </div>
+                )}
               </div>
-              {pr.approved_by && (
-                <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 8 }}>
-                  by {pr.approved_by} · {pr.approved_by_role?.replace(/_/g, " ")}
-                </div>
-              )}
+              <div className="prd-sec-head">What Happens Next</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {[
+                  { step: 1, label: "Supplier Risk Agent", sub: "Evaluating best suppliers for PO",  active: true,  color: "#18D8C3" },
+                  { step: 2, label: "Procurement Agent",   sub: "Generate Purchase Order",            active: false, color: "#FF6B35" },
+                  { step: 3, label: "Send to Supplier",    sub: "PO dispatched for fulfillment",      active: false, color: "#6366F1" },
+                  { step: 4, label: "GRN & Payment",       sub: "Goods receipt + invoice settlement", active: false, color: "#22C55E" },
+                ].map(s => (
+                  <div key={s.step} style={{ display: "flex", gap: 10, alignItems: "flex-start", opacity: s.active ? 1 : 0.4 }}>
+                    <div style={{ width: 24, height: 24, borderRadius: "50%", background: s.active ? s.color : "var(--border)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, color: "#fff", fontSize: 10, fontWeight: 800 }}>{s.step}</div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text)" }}>{s.label}</div>
+                      <div style={{ fontSize: 10, color: "var(--muted)", marginTop: 1 }}>{s.sub}</div>
+                    </div>
+                    {s.active && <div style={{ width: 7, height: 7, borderRadius: "50%", background: s.color, flexShrink: 0, marginTop: 8, animation: "prd-pulse 1.5s ease-in-out infinite" }}/>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* REJECTED badge */}
+          {pr.status === "REJECTED" && (
+            <div className="prd-card" style={{ textAlign: "center", padding: 20 }}>
+              <div className="prd-status-badge REJECTED" style={{ fontSize: 13, padding: "8px 18px", display: "inline-flex" }}>✗ Rejected</div>
               {pr.rejection_reason && (
-                <div style={{ fontSize: 11, color: "var(--red)", marginTop: 6, fontStyle: "italic" }}>
+                <div style={{ fontSize: 11, color: "var(--red)", marginTop: 8, fontStyle: "italic" }}>
                   &ldquo;{pr.rejection_reason}&rdquo;
-                </div>
-              )}
-              {pr.status === "APPROVED" && (
-                <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 10, lineHeight: 1.5 }}>
-                  Next step: Supplier Risk Agent will evaluate suppliers and recommend the best match for PO generation.
                 </div>
               )}
             </div>
