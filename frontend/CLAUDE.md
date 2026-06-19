@@ -64,6 +64,13 @@ POST       /api/procurement/pr/[id]/resubmit
 
 **Branch inventory CSS rule:** each branch inventory page owns its own CSS co-located with `page.tsx` (e.g. `blr-inventory.css`). Never import `src/app/inventory/inventory.css` (CEO page) from a branch page — CEO CSS changes will break branch layouts. `.nexora-inventory` root must explicitly set `flex-direction: column`; omitting it defaults to row and produces a broken horizontal layout.
 
+**PR form rules (Phase 23):**
+- PR form is branch-scoped: `/branch/bangalore/procurement/pr/page.tsx` — NOT global `/procurement/pr/`. Each branch owns its own PR form (matches branch inventory pattern).
+- PR form CSS root `.nexora-pr` must set `display: flex; flex-direction: column` — omitting `flex-direction: column` defaults to row and breaks layout.
+- Lock all editable fields after PR creation: `disabled={!!pr}` — prevents double-submission on re-render.
+- Amber qty diff: apply class `pr-qty-changed` when `manager_qty !== agent_suggested_qty` — visible audit trail for approvers.
+- Accessibility: any `<input>` inside a table column (no visible label) needs `title="..."` and `aria-label="..."`. Any button containing only an SVG/icon needs `title="..."` and `aria-label="..."`.
+
 **Status badge colors:**
 - `PENDING` → amber `#f59e0b`
 - `APPROVED` → green `#10b981`

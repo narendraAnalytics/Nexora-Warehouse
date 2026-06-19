@@ -91,6 +91,12 @@ uv run python -c "from api.procurement import router; print('OK')"
 curl -X POST http://localhost:8000/procurement/pr/generate -H "Content-Type: application/json" -d '{"warehouse_id":"<uuid>"}'
 ```
 
+**Phase 23 gotchas (learned in implementation):**
+- `reorder_alerts` SQL in `api/inventory.py` MUST SELECT `p.unit_cost, p.unit_price, p.brand` — without these the PR form receives 0 for all costs and line totals.
+- PR number sequence: `COUNT(*) + 1 FROM purchase_requisitions WHERE warehouse_id = $1` — sequential per warehouse, NOT global. Produces `PR-2026-BLR-0001`.
+- `approval_matrix` table is the sole source for approval levels — query it in `_determine_approval_level()`. Never hardcode ≤5L/5-25L thresholds in Python.
+- HITL deadline: set in SQL as `NOW() + INTERVAL '48 hours'` (not Python datetime) so it uses DB server time.
+
 ---
 
 ### ✅ Phase 17 — Render Production Deployment (COMPLETE)

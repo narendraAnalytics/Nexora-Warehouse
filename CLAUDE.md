@@ -33,7 +33,7 @@ Each folder has its own `CLAUDE.md` with full context. Always read the relevant 
 | Frontend | Phase 20.5 — Transition Page + Placeholder Dashboard | ✅ Complete |
 | Frontend | Phase 21 — Full AI Dashboard | ✅ Complete |
 | Frontend | Phase 21.5 — Product Master (Add Product Page) | ✅ Complete |
-| Backend + Frontend | Phase 23 — Procurement Phase 1: PR Lifecycle | ⏳ In Progress |
+| Backend + Frontend | Phase 23 — Procurement Phase 1: PR Lifecycle | ✅ Complete |
 | Next up | Phase 22 — WebSocket Real-Time / WhatsApp / Monitoring | ⏳ Pending |
 
 ---
@@ -105,3 +105,6 @@ Hyderabad · Bangalore · Chennai · Mumbai · Pune
 - HITL escalation: 48h deadline on every PR, auto-escalate to next level if no action.
 - Orchestrator-first: `/procurement/pr/generate` routes through existing Orchestrator → Inventory → Demand → Procurement agents.
 - Page CSS ownership: every page must import its OWN CSS file — never import a CSS file from another page's directory. Shared `ni-*` utility styles must be copied into a page-local CSS file. Violating this causes cross-page layout breakage when either page's CSS is changed.
+- PR form design: `agent_suggested_qty` (locked AI value) stored alongside `manager_qty` (editable) in items JSONB — never overwrite agent value; preserved for future AI learning.
+- sessionStorage handoff: inventory page writes `sessionStorage.setItem("blr_pr_analysis", JSON.stringify(analysis))` before navigating to PR form. PR page reads it on mount.
+- Accessibility: every unlabelled `<input>` and icon-only `<button>` MUST have both `title` and `aria-label` attributes — linters block deployment without them.
