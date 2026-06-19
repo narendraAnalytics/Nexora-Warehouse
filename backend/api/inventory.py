@@ -47,8 +47,10 @@ async def analyze_inventory(body: InventoryAnalyzeRequest, request: Request):
             alert_rows = await conn.fetch(
                 """
                 SELECT
-                    p.sku, p.name, p.category,
+                    p.sku, p.name, p.category, p.brand,
+                    p.unit_cost, p.unit_price,
                     i.quantity, i.reorder_point, i.reorder_qty,
+                    ROUND(i.avg_daily_sales, 2)::FLOAT AS avg_daily_sales,
                     (i.reorder_point - i.quantity) AS deficit
                 FROM inventory i
                 JOIN products p ON p.id = i.product_id

@@ -76,19 +76,25 @@ async def create_purchase_requisition(
         items = []
         total_value = 0.0
         for alert in reorder_alerts:
-            unit_cost = float(alert.get("unit_cost", 0))
-            suggested_qty = int(alert.get("reorder_qty", alert.get("suggested_qty", 0)))
-            line_total = round(unit_cost * suggested_qty, 2)
-            total_value += line_total
+            unit_cost           = float(alert.get("unit_cost", 0))
+            unit_price          = float(alert.get("unit_price", 0))
+            agent_suggested_qty = int(alert.get("reorder_qty", alert.get("agent_suggested_qty", 0)))
+            manager_qty         = int(alert.get("manager_qty", agent_suggested_qty))
+            line_total          = round(unit_cost * manager_qty, 2)
+            total_value        += line_total
             items.append({
-                "sku":           alert.get("sku", ""),
-                "name":          alert.get("name", ""),
-                "category":      alert.get("category", ""),
-                "current_qty":   int(alert.get("quantity", alert.get("current_qty", 0))),
-                "reorder_point": int(alert.get("reorder_point", 0)),
-                "suggested_qty": suggested_qty,
-                "unit_cost":     unit_cost,
-                "line_total":    line_total,
+                "sku":                 alert.get("sku", ""),
+                "name":                alert.get("name", ""),
+                "category":            alert.get("category", ""),
+                "brand":               alert.get("brand", ""),
+                "current_qty":         int(alert.get("quantity", alert.get("current_qty", 0))),
+                "reorder_point":       int(alert.get("reorder_point", 0)),
+                "agent_suggested_qty": agent_suggested_qty,
+                "manager_qty":         manager_qty,
+                "unit_cost":           unit_cost,
+                "unit_price":          unit_price,
+                "line_total":          line_total,
+                "manager_comment":     alert.get("manager_comment", ""),
             })
 
         # Determine approval level
