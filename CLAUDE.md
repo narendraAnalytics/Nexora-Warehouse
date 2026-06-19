@@ -34,7 +34,10 @@ Each folder has its own `CLAUDE.md` with full context. Always read the relevant 
 | Frontend | Phase 21 — Full AI Dashboard | ✅ Complete |
 | Frontend | Phase 21.5 — Product Master (Add Product Page) | ✅ Complete |
 | Backend + Frontend | Phase 23 — Procurement Phase 1: PR Lifecycle | ✅ Complete |
-| Next up | Phase 22 — WebSocket Real-Time / WhatsApp / Monitoring | ⏳ Pending |
+| Backend + Frontend | Phase 25 — Supplier Risk Agent + PO Generation | ✅ Complete |
+| Backend + Frontend | Phase 26 — GRN + Payment (Full Procurement Cycle) | ✅ Complete |
+| Next up | Phase 27 — Sales Workflow (Customer Master → Orders → Fulfillment) | ⏳ Pending |
+| Deferred | Phase 22 — WebSocket Real-Time / WhatsApp / Monitoring | ⏳ Pending |
 
 ---
 
@@ -108,3 +111,11 @@ Hyderabad · Bangalore · Chennai · Mumbai · Pune
 - PR form design: `agent_suggested_qty` (locked AI value) stored alongside `manager_qty` (editable) in items JSONB — never overwrite agent value; preserved for future AI learning.
 - sessionStorage handoff: inventory page writes `sessionStorage.setItem("blr_pr_analysis", JSON.stringify(analysis))` before navigating to PR form. PR page reads it on mount.
 - Accessibility: every unlabelled `<input>` and icon-only `<button>` MUST have both `title` and `aria-label` attributes — linters block deployment without them.
+- Supplier seed: 5 Indian electronics suppliers seeded in Neon DB + `init_db.py` with fixed UUIDs (`a1b2c3d4-000X-...`). Categories match PR item categories exactly: `TVs & Displays`, `Mobiles & Tablets`, `Gaming Consoles`, `Networking Equipment`, `Accessories`, `Laptops`.
+- PO status flow: `draft → received → paid` (set by GRN creation and payment recording respectively).
+- GRN number format: `GRN-{year}-{city}-{seq:05d}`. Payment number: `PAY-{year}-{city}-{seq:05d}`.
+- GRN CSS scoped to `.nexora-grn` — same scoping pattern as `.nexora-po`, `.nexora-dash`.
+- Inventory correctness rule: `products` API seeds inventory with `quantity = 0` — physical stock only increases via GRN receipt (`UPDATE inventory SET quantity = quantity + received_qty`). Never seed quantity from form fields.
+- `render.yaml` build command: `pip install uv && uv sync --frozen` — RAG seed step permanently removed (data seeded once in Phase 3, re-seeding breaks build with `ConnectionDoesNotExistError`).
+- GRN page idempotency: on load, use `GET /api/procurement/payment?grn_id=...` to check for existing payment — never POST on page load.
+- Full procurement cycle route: `PR (PENDING→APPROVED) → PO (draft) → GRN (completed) → Payment (paid)` — all linked by FK chain `pr_id → po_id → grn_id → payment_id`.
