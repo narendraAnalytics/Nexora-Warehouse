@@ -23,6 +23,8 @@ from tools.pr_tools import (
     get_pr_finance_analysis,
     get_best_supplier_for_pr,
     create_po_from_pr,
+    create_grn_from_po,
+    create_payment_from_grn,
 )
 
 router = APIRouter()
@@ -407,3 +409,223 @@ async def get_po(po_id: str, request: Request):
     if not row:
         raise HTTPException(status_code=404, detail="PO not found")
     return _row_to_po_response(dict(row))
+
+
+# ── Phase 26: GRN + Payment ────────────────────────────────────────────────
+
+
+def _row_to_grn_response(row: dict) -> dict:
+    items = row.get("items", [])
+    if isinstance(items, str):
+        items = json.loads(items)
+    for ts_field in ("received_at", "created_at"):
+        v = row.get(ts_field)
+        if hasattr(v, "isoformat"):
+            row[ts_field] = v.isoformat()
+        else:
+            row[ts_field] = str(v or "")
+    return {
+        "id":                   str(row["id"]),
+        "grn_number":           row["grn_number"],
+        "po_id":                str(row.get("po_id") or ""),
+        "po_number":            row.get("po_number") or "",
+        "warehouse_id":         str(row.get("warehouse_id") or ""),
+        "received_by":          row.get("received_by") or "warehouse_manager",
+        "status":               row.get("status") or "completed",
+        "items":                items,
+        "total_received_value": float(row.get("total_received_value") or 0),
+        "notes":                row.get("notes"),
+        "received_at":          row["received_at"],
+        "created_at":           row["created_at"],
+        "supplier_name":        row.get("supplier_name") or "",
+        "supplier_city":        row.get("supplier_city") or "",
+    }
+
+
+def _row_to_payment_response(row: dict) -> dict:
+    v = row.get("created_at")
+    created = v.isoformat() if hasattr(v, "isoformat") else str(v or "")
+    return {
+        "id":             str(row["id"]),
+        "payment_number": row["payment_number"],
+        "po_id":          str(row.get("po_id") or ""),
+        "po_number":      row.get("po_number") or "",
+        "grn_id":         str(row.get("grn_id") or ""),
+        "supplier_id":    str(row.get("supplier_id") or ""),
+        "supplier_name":  row.get("supplier_name") or "",
+        "amount":         float(row.get("amount") or 0),
+        "payment_mode":   row.get("payment_mode") or "bank_transfer",
+        "payment_date":   str(row.get("payment_date") or ""),
+        "status":         row.get("status") or "paid",
+        "invoice_number": row.get("invoice_number"),
+        "created_at":     created,
+    }
+
+
+@router.post("/po/{po_id}/grn", tags=["Procurement"])
+async def create_grn(po_id: str, request: Request):
+    """
+    Phase 26 — Create GRN for a received PO.
+    Updates inventory quantities. Idempotent — returns existing GRN if already created.
+    """
+    pool = request.app.state.pool
+    try:
+        # Idempotency check
+        async with pool.acquire() as conn:
+            existing = await conn.fetchrow(
+                """
+                SELECT g.id::TEXT, g.grn_number, g.po_id::TEXT, g.warehouse_id::TEXT,
+                       g.received_by, g.status, g.items, g.total_received_value::FLOAT,
+                       g.notes, g.received_at, g.created_at,
+                       s.name AS supplier_name, s.city AS supplier_city, po.po_number
+                FROM goods_receipt_notes g
+                JOIN purchase_orders po ON po.id = g.po_id
+                JOIN suppliers s ON s.id = po.supplier_id
+                WHERE g.po_id = $1::uuid
+                LIMIT 1
+                """,
+                po_id,
+            )
+        if existing:
+            return _row_to_grn_response(dict(existing))
+
+        grn = await create_grn_from_po(po_id, pool)
+        return _row_to_grn_response(grn)
+
+    except HTTPException:
+        raise
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/grn", tags=["Procurement"])
+async def list_grns(request: Request, po_id: str | None = None):
+    """List GRNs, optionally filtered by po_id."""
+    pool = request.app.state.pool
+    async with pool.acquire() as conn:
+        rows = await conn.fetch(
+            """
+            SELECT g.id::TEXT, g.grn_number, g.po_id::TEXT, g.warehouse_id::TEXT,
+                   g.received_by, g.status, g.items, g.total_received_value::FLOAT,
+                   g.notes, g.received_at, g.created_at,
+                   s.name AS supplier_name, s.city AS supplier_city, po.po_number
+            FROM goods_receipt_notes g
+            JOIN purchase_orders po ON po.id = g.po_id
+            JOIN suppliers s ON s.id = po.supplier_id
+            WHERE ($1::uuid IS NULL OR g.po_id = $1::uuid)
+            ORDER BY g.created_at DESC
+            LIMIT 50
+            """,
+            po_id,
+        )
+    return [_row_to_grn_response(dict(r)) for r in rows]
+
+
+@router.get("/grn/{grn_id}", tags=["Procurement"])
+async def get_grn(grn_id: str, request: Request):
+    """Get GRN detail."""
+    pool = request.app.state.pool
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow(
+            """
+            SELECT g.id::TEXT, g.grn_number, g.po_id::TEXT, g.warehouse_id::TEXT,
+                   g.received_by, g.status, g.items, g.total_received_value::FLOAT,
+                   g.notes, g.received_at, g.created_at,
+                   s.name AS supplier_name, s.city AS supplier_city, po.po_number
+            FROM goods_receipt_notes g
+            JOIN purchase_orders po ON po.id = g.po_id
+            JOIN suppliers s ON s.id = po.supplier_id
+            WHERE g.id = $1::uuid
+            """,
+            grn_id,
+        )
+    if not row:
+        raise HTTPException(status_code=404, detail="GRN not found")
+    return _row_to_grn_response(dict(row))
+
+
+@router.post("/grn/{grn_id}/payment", tags=["Procurement"])
+async def create_payment(grn_id: str, request: Request):
+    """
+    Phase 26 — Record payment for a GRN. Marks PO as paid. Idempotent.
+    """
+    pool = request.app.state.pool
+    try:
+        # Idempotency check
+        async with pool.acquire() as conn:
+            existing = await conn.fetchrow(
+                """
+                SELECT p.id::TEXT, p.payment_number, p.po_id::TEXT, p.grn_id::TEXT,
+                       p.supplier_id::TEXT, p.amount::FLOAT, p.payment_mode,
+                       p.payment_date::TEXT, p.status, p.invoice_number, p.created_at,
+                       po.po_number, s.name AS supplier_name
+                FROM payments p
+                JOIN purchase_orders po ON po.id = p.po_id
+                JOIN suppliers s ON s.id = p.supplier_id
+                WHERE p.grn_id = $1::uuid
+                LIMIT 1
+                """,
+                grn_id,
+            )
+        if existing:
+            return _row_to_payment_response(dict(existing))
+
+        payment = await create_payment_from_grn(grn_id, pool)
+        return _row_to_payment_response(payment)
+
+    except HTTPException:
+        raise
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/payment", tags=["Procurement"])
+async def list_payments(request: Request, grn_id: str | None = None, po_id: str | None = None):
+    """List payments, optionally filtered by grn_id or po_id."""
+    pool = request.app.state.pool
+    async with pool.acquire() as conn:
+        rows = await conn.fetch(
+            """
+            SELECT p.id::TEXT, p.payment_number, p.po_id::TEXT, p.grn_id::TEXT,
+                   p.supplier_id::TEXT, p.amount::FLOAT, p.payment_mode,
+                   p.payment_date::TEXT, p.status, p.invoice_number, p.created_at,
+                   po.po_number, s.name AS supplier_name
+            FROM payments p
+            JOIN purchase_orders po ON po.id = p.po_id
+            JOIN suppliers s ON s.id = p.supplier_id
+            WHERE ($1::uuid IS NULL OR p.grn_id = $1::uuid)
+              AND ($2::uuid IS NULL OR p.po_id = $2::uuid)
+            ORDER BY p.created_at DESC
+            LIMIT 50
+            """,
+            grn_id,
+            po_id,
+        )
+    return [_row_to_payment_response(dict(r)) for r in rows]
+
+
+@router.get("/payment/{payment_id}", tags=["Procurement"])
+async def get_payment(payment_id: str, request: Request):
+    """Get payment detail."""
+    pool = request.app.state.pool
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow(
+            """
+            SELECT p.id::TEXT, p.payment_number, p.po_id::TEXT, p.grn_id::TEXT,
+                   p.supplier_id::TEXT, p.amount::FLOAT, p.payment_mode,
+                   p.payment_date::TEXT, p.status, p.invoice_number, p.created_at,
+                   po.po_number, s.name AS supplier_name
+            FROM payments p
+            JOIN purchase_orders po ON po.id = p.po_id
+            JOIN suppliers s ON s.id = p.supplier_id
+            WHERE p.id = $1::uuid
+            """,
+            payment_id,
+        )
+    if not row:
+        raise HTTPException(status_code=404, detail="Payment not found")
+    return _row_to_payment_response(dict(row))

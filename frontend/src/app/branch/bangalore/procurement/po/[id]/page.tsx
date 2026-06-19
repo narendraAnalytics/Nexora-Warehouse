@@ -51,15 +51,37 @@ export default function BranchPODetailPage() {
 
   const [po, setPO] = useState<PODetail | null>(null)
   const [loading, setLoading] = useState(true)
+  const [creatingGrn, setCreatingGrn] = useState(false)
+  const [existingGrnId, setExistingGrnId] = useState<string | null>(null)
 
   useEffect(() => {
     if (!poId) return
     fetch(`/api/procurement/po/${poId}`)
       .then(r => r.json())
-      .then((d: PODetail) => setPO(d))
+      .then((d: PODetail) => {
+        setPO(d)
+        // Check for existing GRN (idempotency)
+        return fetch(`/api/procurement/grn?po_id=${poId}`)
+      })
+      .then(r => r.json())
+      .then((grns: { id: string }[]) => {
+        if (Array.isArray(grns) && grns.length > 0) setExistingGrnId(grns[0].id)
+      })
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [poId])
+
+  async function handleCreateGRN() {
+    setCreatingGrn(true)
+    try {
+      const res = await fetch(`/api/procurement/po/${poId}/grn`, { method: "POST" })
+      const data = await res.json()
+      if (!res.ok) { alert(data.detail ?? "Failed to create GRN"); return }
+      router.push(`/branch/bangalore/procurement/grn/${data.id}`)
+    } finally {
+      setCreatingGrn(false)
+    }
+  }
 
   if (loading) {
     return (
@@ -77,9 +99,9 @@ export default function BranchPODetailPage() {
   }
 
   const nextSteps = [
-    { step: 1, label: "Send to Supplier",      sub: "PO dispatched for fulfillment",   active: true,  color: "#18D8C3" },
-    { step: 2, label: "Supplier Confirmation", sub: "Supplier accepts or negotiates",   active: false, color: "#FF6B35" },
-    { step: 3, label: "Goods Receipt (GRN)",   sub: "Warehouse receives & inspects",    active: false, color: "#22C55E" },
+    { step: 1, label: "Send to Supplier",      sub: "PO dispatched for fulfillment",   active: true,             color: "#18D8C3", done: false },
+    { step: 2, label: "Supplier Confirmation", sub: "Supplier accepts or negotiates",   active: false,            color: "#FF6B35", done: false },
+    { step: 3, label: "Goods Receipt (GRN)",   sub: "Warehouse receives & inspects",    active: !existingGrnId,   color: "#22C55E", done: !!existingGrnId },
   ]
 
   return (
@@ -221,18 +243,18 @@ export default function BranchPODetailPage() {
             <div className="po-sec-head">What Happens Next</div>
             <div className="po-next-steps">
               {nextSteps.map(s => (
-                <div key={s.step} style={{ display: "flex", gap: 10, alignItems: "flex-start", opacity: s.active ? 1 : 0.4 }}>
+                <div key={s.step} style={{ display: "flex", gap: 10, alignItems: "flex-start", opacity: (s.active || s.done) ? 1 : 0.4 }}>
                   <div style={{
                     width: 24, height: 24, borderRadius: "50%",
-                    background: s.active ? s.color : "var(--border)",
+                    background: s.done ? "#22C55E" : s.active ? s.color : "var(--border)",
                     display: "flex", alignItems: "center", justifyContent: "center",
                     flexShrink: 0, color: "#fff", fontSize: 10, fontWeight: 800,
-                  }}>{s.step}</div>
+                  }}>{s.done ? "✓" : s.step}</div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text)" }}>{s.label}</div>
                     <div style={{ fontSize: 10, color: "var(--muted)", marginTop: 1 }}>{s.sub}</div>
                   </div>
-                  {s.active && (
+                  {s.active && !s.done && (
                     <div style={{
                       width: 7, height: 7, borderRadius: "50%",
                       background: s.color, flexShrink: 0, marginTop: 8,
@@ -241,6 +263,34 @@ export default function BranchPODetailPage() {
                   )}
                 </div>
               ))}
+            </div>
+            <div style={{ marginTop: 14 }}>
+              {existingGrnId ? (
+                <button
+                  onClick={() => router.push(`/branch/bangalore/procurement/grn/${existingGrnId}`)}
+                  style={{
+                    width: "100%", padding: "9px 0", borderRadius: 8, border: "none",
+                    background: "#18D8C3", color: "#0a1628", fontWeight: 800, fontSize: 12, cursor: "pointer",
+                  }}
+                  title="View GRN" aria-label="View GRN"
+                >
+                  View GRN →
+                </button>
+              ) : (
+                <button
+                  onClick={handleCreateGRN}
+                  disabled={creatingGrn}
+                  style={{
+                    width: "100%", padding: "9px 0", borderRadius: 8, border: "none",
+                    background: creatingGrn ? "var(--border)" : "#18D8C3",
+                    color: creatingGrn ? "var(--muted)" : "#0a1628",
+                    fontWeight: 800, fontSize: 12, cursor: creatingGrn ? "not-allowed" : "pointer",
+                  }}
+                  title="Create GRN" aria-label="Create GRN"
+                >
+                  {creatingGrn ? "Creating GRN…" : "▶ Create GRN"}
+                </button>
+              )}
             </div>
           </div>
 

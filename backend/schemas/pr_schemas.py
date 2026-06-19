@@ -97,3 +97,36 @@ class POResponse(BaseModel):
     items: list[POItem]
     ai_reasoning: str
     created_at: str
+
+
+class GRNResponse(BaseModel):
+    id: str
+    grn_number: str
+    po_id: str
+    po_number: str
+    warehouse_id: str
+    received_by: str
+    status: str
+    items: list[POItem]
+    total_received_value: float
+    notes: str | None
+    received_at: str
+    created_at: str
+    supplier_name: str
+    supplier_city: str
+
+
+class PaymentResponse(BaseModel):
+    id: str
+    payment_number: str
+    po_id: str
+    po_number: str
+    grn_id: str
+    supplier_id: str
+    supplier_name: str
+    amount: float
+    payment_mode: str
+    payment_date: str
+    status: str
+    invoice_number: str | None
+    created_at: str

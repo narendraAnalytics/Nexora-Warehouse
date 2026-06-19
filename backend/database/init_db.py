@@ -331,6 +331,41 @@ async def init_db(pool: asyncpg.Pool) -> None:
             ADD COLUMN IF NOT EXISTS items JSONB DEFAULT '[]'
         """)
 
+        # ── Phase 26: GRN + Payment tables ────────────────────────────────────
+
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS goods_receipt_notes (
+                id                   UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                grn_number           TEXT NOT NULL UNIQUE,
+                po_id                UUID NOT NULL REFERENCES purchase_orders(id),
+                warehouse_id         UUID NOT NULL REFERENCES warehouses(id),
+                received_by          TEXT DEFAULT 'warehouse_manager',
+                status               TEXT NOT NULL DEFAULT 'completed',
+                items                JSONB DEFAULT '[]',
+                total_received_value NUMERIC(14,2) DEFAULT 0,
+                notes                TEXT,
+                received_at          TIMESTAMPTZ DEFAULT NOW(),
+                created_at           TIMESTAMPTZ DEFAULT NOW()
+            )
+        """)
+
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS payments (
+                id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                payment_number TEXT NOT NULL UNIQUE,
+                po_id          UUID NOT NULL REFERENCES purchase_orders(id),
+                grn_id         UUID REFERENCES goods_receipt_notes(id),
+                supplier_id    UUID REFERENCES suppliers(id),
+                amount         NUMERIC(14,2) NOT NULL,
+                payment_mode   TEXT DEFAULT 'bank_transfer',
+                payment_date   DATE DEFAULT CURRENT_DATE,
+                status         TEXT NOT NULL DEFAULT 'paid',
+                invoice_number TEXT,
+                notes          TEXT,
+                created_at     TIMESTAMPTZ DEFAULT NOW()
+            )
+        """)
+
         # ── Phase 25: Supplier seed (idempotent) ──────────────────────────────
         await conn.execute("""
             INSERT INTO suppliers (id, name, contact_person, email, phone, address, city,

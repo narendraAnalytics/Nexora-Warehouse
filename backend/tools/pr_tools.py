@@ -415,6 +415,154 @@ async def create_po_from_pr(pr_id: str, supplier: dict, pool: asyncpg.Pool) -> d
     return result
 
 
+async def create_grn_from_po(po_id: str, pool: asyncpg.Pool) -> dict:
+    """
+    Phase 26 — Goods Receipt Note (deterministic).
+    Copies PO line items as received, updates inventory quantities, marks PO as received.
+    """
+    async with pool.acquire() as conn:
+        po = await conn.fetchrow(
+            """
+            SELECT po.warehouse_id, po.items, po.total_amount, po.supplier_id,
+                   s.name AS supplier_name, s.city AS supplier_city, po.po_number
+            FROM purchase_orders po
+            JOIN suppliers s ON s.id = po.supplier_id
+            WHERE po.id = $1::uuid
+            """,
+            po_id,
+        )
+        if not po:
+            raise ValueError(f"PO {po_id} not found")
+
+        warehouse_id = str(po["warehouse_id"])
+        raw_items = po["items"]
+        if isinstance(raw_items, str):
+            raw_items = json.loads(raw_items)
+
+        # Sequential GRN number
+        year = datetime.now(timezone.utc).year
+        city_code = await conn.fetchval(
+            "SELECT city FROM warehouses WHERE id = $1::uuid", warehouse_id
+        )
+        city_code = (city_code or "WH")[:3].upper()
+        seq = await conn.fetchval(
+            "SELECT COUNT(*) + 1 FROM goods_receipt_notes WHERE warehouse_id = $1::uuid", warehouse_id
+        )
+        grn_number = f"GRN-{year}-{city_code}-{seq:05d}"
+
+        total_value = float(po["total_amount"] or 0)
+
+        grn_id = await conn.fetchval(
+            """
+            INSERT INTO goods_receipt_notes
+                (grn_number, po_id, warehouse_id, status, items, total_received_value, received_at)
+            VALUES ($1, $2::uuid, $3::uuid, 'completed', $4, $5, NOW())
+            RETURNING id
+            """,
+            grn_number, po_id, warehouse_id, json.dumps(raw_items), total_value,
+        )
+
+        # Update inventory for each item
+        for item in raw_items:
+            qty = int(item.get("quantity") or 0)
+            sku = item.get("sku", "")
+            if qty > 0 and sku:
+                await conn.execute(
+                    """
+                    UPDATE inventory
+                    SET quantity = quantity + $1, updated_at = NOW()
+                    WHERE warehouse_id = $2::uuid
+                      AND product_id = (SELECT id FROM products WHERE sku = $3 LIMIT 1)
+                    """,
+                    qty, warehouse_id, sku,
+                )
+
+        # Mark PO as received
+        await conn.execute(
+            "UPDATE purchase_orders SET status = 'received', updated_at = NOW() WHERE id = $1::uuid",
+            po_id,
+        )
+
+        # Record purchase in finance_records
+        await conn.execute(
+            """
+            INSERT INTO finance_records (warehouse_id, record_type, reference_id, reference_type, amount, description)
+            VALUES ($1::uuid, 'purchase', $2::uuid, 'grn', $3, $4)
+            """,
+            warehouse_id, grn_id, total_value, f"Purchase via GRN {grn_number}",
+        )
+
+        row = await conn.fetchrow(
+            "SELECT id::TEXT, grn_number, po_id::TEXT, warehouse_id::TEXT, received_by, status, items, total_received_value::FLOAT, notes, received_at, created_at FROM goods_receipt_notes WHERE id = $1",
+            grn_id,
+        )
+
+    result = dict(row)
+    result["supplier_name"] = po["supplier_name"]
+    result["supplier_city"] = po["supplier_city"]
+    result["po_number"]     = po["po_number"]
+    return result
+
+
+async def create_payment_from_grn(grn_id: str, pool: asyncpg.Pool) -> dict:
+    """
+    Phase 26 — Payment recording (deterministic).
+    Creates a payment record for the GRN's PO and marks PO as paid.
+    """
+    async with pool.acquire() as conn:
+        grn = await conn.fetchrow(
+            """
+            SELECT g.po_id, g.warehouse_id, g.total_received_value, g.grn_number,
+                   po.supplier_id, po.po_number,
+                   s.name AS supplier_name
+            FROM goods_receipt_notes g
+            JOIN purchase_orders po ON po.id = g.po_id
+            JOIN suppliers s ON s.id = po.supplier_id
+            WHERE g.id = $1::uuid
+            """,
+            grn_id,
+        )
+        if not grn:
+            raise ValueError(f"GRN {grn_id} not found")
+
+        warehouse_id = str(grn["warehouse_id"])
+        year = datetime.now(timezone.utc).year
+        city_code = await conn.fetchval(
+            "SELECT city FROM warehouses WHERE id = $1::uuid", warehouse_id
+        )
+        city_code = (city_code or "WH")[:3].upper()
+        seq = await conn.fetchval(
+            "SELECT COUNT(*) + 1 FROM payments WHERE po_id = $1::uuid", str(grn["po_id"])
+        )
+        payment_number = f"PAY-{year}-{city_code}-{seq:05d}"
+
+        amount = float(grn["total_received_value"] or 0)
+
+        payment_id = await conn.fetchval(
+            """
+            INSERT INTO payments (payment_number, po_id, grn_id, supplier_id, amount, status)
+            VALUES ($1, $2::uuid, $3::uuid, $4::uuid, $5, 'paid')
+            RETURNING id
+            """,
+            payment_number, str(grn["po_id"]), grn_id, str(grn["supplier_id"]), amount,
+        )
+
+        await conn.execute(
+            "UPDATE purchase_orders SET status = 'paid', updated_at = NOW() WHERE id = $1::uuid",
+            str(grn["po_id"]),
+        )
+
+        row = await conn.fetchrow(
+            "SELECT id::TEXT, payment_number, po_id::TEXT, grn_id::TEXT, supplier_id::TEXT, amount::FLOAT, payment_mode, payment_date::TEXT, status, invoice_number, created_at FROM payments WHERE id = $1",
+            payment_id,
+        )
+
+    result = dict(row)
+    result["po_number"]     = grn["po_number"]
+    result["supplier_name"] = grn["supplier_name"]
+    return result
+
+
 async def log_agent_event(
     workflow_id: str,
     agent_name: str,
