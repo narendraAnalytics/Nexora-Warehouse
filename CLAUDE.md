@@ -104,3 +104,4 @@ Hyderabad · Bangalore · Chennai · Mumbai · Pune
 - PR number: `PR-2026-BLR-0001`. Workflow ID: `WF-2026-BLR-00042` (links PR→PO→GRN→Payment chain).
 - HITL escalation: 48h deadline on every PR, auto-escalate to next level if no action.
 - Orchestrator-first: `/procurement/pr/generate` routes through existing Orchestrator → Inventory → Demand → Procurement agents.
+- Page CSS ownership: every page must import its OWN CSS file — never import a CSS file from another page's directory. Shared `ni-*` utility styles must be copied into a page-local CSS file. Violating this causes cross-page layout breakage when either page's CSS is changed.

@@ -62,6 +62,8 @@ POST       /api/procurement/pr/[id]/resubmit
 
 **CSS:** scoped to `.nexora-procurement` — same pattern as `.nexora-dash`. No `:root` vars, no global resets.
 
+**Branch inventory CSS rule:** each branch inventory page owns its own CSS co-located with `page.tsx` (e.g. `blr-inventory.css`). Never import `src/app/inventory/inventory.css` (CEO page) from a branch page — CEO CSS changes will break branch layouts. `.nexora-inventory` root must explicitly set `flex-direction: column`; omitting it defaults to row and produces a broken horizontal layout.
+
 **Status badge colors:**
 - `PENDING` → amber `#f59e0b`
 - `APPROVED` → green `#10b981`
