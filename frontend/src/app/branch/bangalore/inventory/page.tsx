@@ -651,7 +651,10 @@ export default function BranchInventoryPage() {
             <button
               className={`ni-btn ni-btn-success${analysis && analysis.low_stock_count > 0 ? " enabled" : ""}`}
               disabled={!analysis || analysis.low_stock_count === 0}
-              onClick={() => router.push(`/branch/${branch}/procurement/pr`)}
+              onClick={() => {
+                sessionStorage.setItem("blr_pr_analysis", JSON.stringify(analysis))
+                router.push(`/branch/${branch}/procurement/pr`)
+              }}
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>

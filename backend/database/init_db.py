@@ -247,3 +247,81 @@ async def init_db(pool: asyncpg.Pool) -> None:
                 created_at      TIMESTAMPTZ DEFAULT NOW()
             )
         """)
+
+        # ── Phase 23: Purchase Requisition tables ──────────────────────────────
+
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS purchase_requisitions (
+                id                     UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                pr_number              TEXT NOT NULL UNIQUE,
+                workflow_id            TEXT NOT NULL,
+                warehouse_id           UUID NOT NULL REFERENCES warehouses(id),
+                status                 TEXT NOT NULL DEFAULT 'PENDING',
+                total_estimated_value  NUMERIC(14,2) DEFAULT 0,
+                required_by            DATE,
+                requested_by           TEXT DEFAULT 'branch_manager',
+                approved_by            TEXT,
+                approved_by_role       TEXT,
+                approval_level         TEXT,
+                approver_role          TEXT,
+                notes                  TEXT,
+                rejection_reason       TEXT,
+                inventory_analysis     JSONB DEFAULT '{}',
+                items                  JSONB DEFAULT '[]',
+                escalation_deadline    TIMESTAMPTZ,
+                created_at             TIMESTAMPTZ DEFAULT NOW(),
+                updated_at             TIMESTAMPTZ DEFAULT NOW()
+            )
+        """)
+
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS pr_approval_history (
+                id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                pr_id         UUID NOT NULL REFERENCES purchase_requisitions(id),
+                action        TEXT NOT NULL,
+                acted_by      TEXT,
+                acted_by_role TEXT,
+                notes         TEXT,
+                created_at    TIMESTAMPTZ DEFAULT NOW()
+            )
+        """)
+
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS approval_matrix (
+                id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                min_value      NUMERIC(14,2) NOT NULL DEFAULT 0,
+                max_value      NUMERIC(14,2),
+                approval_level TEXT NOT NULL,
+                approver_role  TEXT NOT NULL,
+                description    TEXT
+            )
+        """)
+
+        # Seed approval matrix (idempotent — skip if rows already exist)
+        existing = await conn.fetchval("SELECT COUNT(*) FROM approval_matrix")
+        if existing == 0:
+            await conn.execute("""
+                INSERT INTO approval_matrix (min_value, max_value, approval_level, approver_role, description) VALUES
+                (0,        500000,    'L1', 'WAREHOUSE_MANAGER',    'Up to ₹5 Lakhs — Warehouse Manager'),
+                (500001,   2500000,   'L2', 'OPERATIONS_HEAD',      '₹5L to ₹25L — Operations Head'),
+                (2500001,  5000000,   'L3', 'FINANCE_CONTROLLER',   '₹25L to ₹50L — Finance Controller'),
+                (5000001,  10000000,  'L4', 'CEO',                  '₹50L to ₹1 Crore — CEO'),
+                (10000001, NULL,      'L5', 'CEO_AND_FINANCE',      'Above ₹1 Crore — CEO + Finance Controller')
+            """)
+
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS agent_events (
+                id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                workflow_id TEXT,
+                pr_id       UUID REFERENCES purchase_requisitions(id),
+                agent_name  TEXT NOT NULL,
+                event_type  TEXT NOT NULL,
+                payload     JSONB DEFAULT '{}',
+                created_at  TIMESTAMPTZ DEFAULT NOW()
+            )
+        """)
+
+        await conn.execute("""
+            ALTER TABLE purchase_orders
+            ADD COLUMN IF NOT EXISTS pr_id UUID REFERENCES purchase_requisitions(id)
+        """)
