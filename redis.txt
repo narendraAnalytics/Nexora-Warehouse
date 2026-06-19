@@ -1,2 +1,90 @@
-RightsideImage : https://res.cloudinary.com/dkqbzwicr/image/upload/q_auto/f_auto/v1781526127/rightsideimage_ext740.png
-logo : https://res.cloudinary.com/dkqbzwicr/image/upload/q_auto/f_auto/v1781526126/logoImage_nonxua.png
+✅ Bangalore Branch Inventory.html — Full inventory intelligence page with:
+
+Page layout — Same sidebar as the branch dashboard (Inventory highlighted), topbar with back button, 4 KPI cards (Total SKUs, Critical, Low Stock, OK/Overstock), and a full stock table with colour-coded status badges, utilisation bars, and filter buttons (All / Critical / Low / OK / Overstock)
+
+Agent Running Modal — When you click Run Inventory Analysis:
+
+The Loory truck drives continuously across a road strip at the top
+7 animated pipeline steps light up one by one (Frontend → Next.js API → FastAPI → LangGraph → 4 DB Tools → LLM Report → Results Delivered), each with pulsing active state, green done state, and timing labels
+Live log terminal (dark screen, right side) streams actual SQL queries, tool calls, and LLM status lines in real time with colour-coded lines (purple for SQL, blue for tools, pink for LLM, green for success)
+A global progress bar fills from 0→100% over ~13 seconds
+Completion screen pops up with stats (3 Reorder Alerts, 2 Overstock, 1 Transfer Opp, 4 DB Queries)
+Click View Analysis Results → modal closes, full AI analysis panel appears below the table and Generate PR button unlocks
+✅ Bangalore Branch Dashboard.html — Inventory sidebar link now navigates to the new page
+
+
+Now I have everything I need. Let me build the bright modern product form and wire it into the dashboard.
+
+Now let me update the Products link in the dashboard to point to the new form:
+
+Done! Here's what was built:
+
+✅ Nexora Add Product.html — Brand new product form with:
+
+No left sidebar — just the clean form
+Bright gradient topbar (deep violet → purple) with stats chips
+Vibrant hero strip (orange → pink → purple → teal gradient)
+4 form sections — Basic Info, Pricing & Taxation, Inventory & Planning, Additional Info — each with colorful tinted headers and icons
+Right panels — Product Image upload (with drag & drop), Product Status, System Info
+Colorful action bar — Reset (violet outline), Save as Draft (orange), Save Product (violet→pink gradient)
+Toast notifications on save/draft actions
+✅ Nexora Dashboard.html — Products link in the sidebar now navigates directly to the new form.
+
+Navigation flow:
+
+Dashboard sidebar → Products → opens Nexora Add Product.html
+Form page → Back to Dashboard button → returns to Nexora Dashboard.html
+Edited 2 files
+looryflaticon.png
+Ok when user clicked the bangalore dashboard in sidebar inventory . I want nice page design to the branch inventory page also when user clicked the run inventory analysis button rather than just rotating i want to make user to view the agent running background so upload the loory flaticon used for the agent running background agent name work done like that animated agent working flow . so uploaded the page code , backend working process , loory flaticon make a nice modern page design
+invetorypage.txt
+workflow.txt
+Let me read all the uploaded files first to understand what's needed.
+
+Now I'll build the full inventory page + agent animation in one go.
+
+Now wire the Inventory link in the dashboard:
+
+✓
+#5
+✓
+#6
+Here's what was built and wired up:
+
+✅ Bangalore Branch Inventory.html — Full inventory intelligence page with:
+
+Page layout — Same sidebar as the branch dashboard (Inventory highlighted), topbar with back button, 4 KPI cards (Total SKUs, Critical, Low Stock, OK/Overstock), and a full stock table with colour-coded status badges, utilisation bars, and filter buttons (All / Critical / Low / OK / Overstock)
+
+Agent Running Modal — When you click Run Inventory Analysis:
+
+The Loory truck drives continuously across a road strip at the top
+7 animated pipeline steps light up one by one (Frontend → Next.js API → FastAPI → LangGraph → 4 DB Tools → LLM Report → Results Delivered), each with pulsing active state, green done state, and timing labels
+Live log terminal (dark screen, right side) streams actual SQL queries, tool calls, and LLM status lines in real time with colour-coded lines (purple for SQL, blue for tools, pink for LLM, green for success)
+A global progress bar fills from 0→100% over ~13 seconds
+Completion screen pops up with stats (3 Reorder Alerts, 2 Overstock, 1 Transfer Opp, 4 DB Queries)
+Click View Analysis Results → modal closes, full AI analysis panel appears below the table and Generate PR button unlocks
+✅ Bangalore Branch Dashboard.html — Inventory sidebar link now navigates to the new page
+
+Edited 2 files
+Capture.PNG
+agent.PNG
+can't scroll up the page make nice also agent running page black not nice i want bright colors not black animation use bright modern colors not black,white,blue ok .Remain all same as before.
+You've used 90% of your session limit · It resets at 10:30 PM
+Upgrade plan
+Let me read the current file to get exact strings for the edits.
+
+Now I have everything. Three targeted edits in one call — scroll fix + full bright modal CSS + remove auto-scroll.
+
+Done! Here's what changed:
+
+✅ Scroll fixed — Added min-height:0 to the content area so it scrolls properly in all browsers. Also removed the auto-scroll-to-bottom that was trapping the view after analysis completed.
+
+✅ Agent modal — fully bright theme:
+
+Modal background → warm cream #FFFAF5 (matches the dashboard palette)
+Road strip → bright sky blue sky + amber/brown road surface with white lane markings — the truck drives across a real-looking daytime road
+Steps column → warm white background, orange border on active steps, green border on done steps, dark readable text
+Log feed → soft lavender #F5F0FF background with coloured text — purple for SQL queries, teal for tool calls, pink for LLM lines, dark green for success, amber for warnings — all clearly readable on the light background
+Footer → warm peach #FFF3E8 with orange accents
+Complete overlay → bright white/cream with green success icon, white stat cards with orange borders
+Overlay backdrop → warm amber tint instead of black
