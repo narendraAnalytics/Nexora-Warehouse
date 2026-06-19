@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
         ) VALUES (
           ${wh.id}::uuid,
           ${product.id}::uuid,
-          ${safetyStock},
+          0,
           0,
           ${reorderPoint},
           ${reorderQty},
