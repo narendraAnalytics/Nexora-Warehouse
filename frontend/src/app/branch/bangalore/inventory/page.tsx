@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import { useRouter, useParams } from "next/navigation"
-import "../../../inventory/inventory.css"
+import "./blr-inventory.css"
 
 interface StockRow {
   sku:            string
@@ -359,125 +359,6 @@ export default function BranchInventoryPage() {
   return (
     <div className="nexora-inventory">
 
-      {/* ══ SIDEBAR ══ */}
-      <aside className="ni-sidebar">
-        <div className="ni-sb-logo">
-          <svg className="ni-sb-logo-mark" viewBox="0 0 34 34" fill="none">
-            <defs>
-              <linearGradient id="nisg1" x1="0" y1="0" x2="34" y2="34">
-                <stop offset="0%" stopColor="#FF8C00"/>
-                <stop offset="100%" stopColor="#FFD700"/>
-              </linearGradient>
-            </defs>
-            <path d="M17 1.5L32.5 13V32.5H1.5V13Z" fill="white" stroke="url(#nisg1)" strokeWidth="2" strokeLinejoin="round"/>
-            <rect x="3" y="13" width="7" height="18" rx="1.2" fill="#FF6B35"/>
-            <polygon points="10,13 15,13 21,31 16,31" fill="#FFB800"/>
-            <rect x="13" y="13" width="7" height="18" rx="1.2" fill="#FF6B35"/>
-            <rect x="22" y="13" width="9.5" height="6" rx="1.5" fill="#FF6B35"/>
-            <rect x="22" y="21" width="9.5" height="5" rx="1.5" fill="#18D8C3"/>
-          </svg>
-          <div>
-            <div className="ni-sb-logo-name">NEXORA</div>
-            <div className="ni-sb-logo-sub">Warehouse</div>
-          </div>
-        </div>
-        <div className="ni-sb-nav">
-          <a className="ni-nav-a" href={`/branch/${branch}/dashboard`}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-              <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
-            </svg>
-            Dashboard
-          </a>
-          <a className="ni-nav-a">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-            </svg>
-            Sales
-          </a>
-          <a className="ni-nav-a">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/>
-            </svg>
-            Returns
-          </a>
-          <a className="ni-nav-a active">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
-            </svg>
-            Inventory
-          </a>
-          <a className="ni-nav-a">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
-              <line x1="3" y1="6" x2="21" y2="6"/>
-            </svg>
-            Purchase
-          </a>
-          <a className="ni-nav-a">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="3" width="18" height="18" rx="2"/>
-              <path d="M3 9h18M9 21V9"/>
-            </svg>
-            Orders &amp; POs
-          </a>
-          <a className="ni-nav-a" href={`/branch/${branch}/procurement/pr`}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-              <polyline points="14 2 14 8 20 8"/>
-            </svg>
-            PR Management
-          </a>
-          <a className="ni-nav-a">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <rect x="1" y="3" width="15" height="13"/>
-              <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/>
-              <circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
-            </svg>
-            GRN &amp; Receipts
-          </a>
-          <a className="ni-nav-a">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-              <circle cx="9" cy="7" r="4"/>
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-            </svg>
-            Suppliers
-          </a>
-          <a className="ni-nav-a">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
-              <line x1="6" y1="20" x2="6" y2="14"/>
-            </svg>
-            Reports
-          </a>
-          <a className="ni-nav-a">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-              <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-            </svg>
-            Alerts
-            <span className="ni-nav-badge">8</span>
-          </a>
-          <a className="ni-nav-a">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <rect x="3" y="8" width="18" height="12" rx="2"/>
-              <path d="M12 2v4"/><circle cx="12" cy="6" r="2" fill="currentColor" stroke="none"/>
-            </svg>
-            Agents Hub
-          </a>
-          <a className="ni-nav-a">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <circle cx="12" cy="12" r="3"/>
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-            </svg>
-            Settings
-          </a>
-        </div>
-      </aside>
-
-      {/* ══ MAIN AREA ══ */}
-      <div className="ni-main-area">
 
         {/* TOPBAR */}
         <div className="ni-topbar">
@@ -782,8 +663,6 @@ export default function BranchInventoryPage() {
             </button>
           </div>
         </div>
-
-      </div>{/* /ni-main-area */}
 
       {/* ══ AGENT MODAL ══ */}
       {modalOpen && (
