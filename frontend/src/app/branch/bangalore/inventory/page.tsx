@@ -142,7 +142,8 @@ export default function BranchInventoryPage() {
   const [progPct,      setProgPct]      = useState(0)
   const [mfStatus,     setMfStatus]     = useState("Initializing inventory agent…")
   const [elapsedSec,   setElapsedSec]   = useState(0)
-  const [truckStopped, setTruckStopped] = useState(false)
+  const [truckStopped,     setTruckStopped]     = useState(false)
+  const [revealingResults, setRevealingResults] = useState(false)
   const timeoutsRef  = useRef<ReturnType<typeof setTimeout>[]>([])
   const intervalRef  = useRef<ReturnType<typeof setInterval> | null>(null)
   const logBodyRef   = useRef<HTMLDivElement>(null)
@@ -251,6 +252,12 @@ export default function BranchInventoryPage() {
     setModalOpen(false)
     setModalDone(false)
     setTruckStopped(false)
+  }
+
+  const handleViewResults = () => {
+    closeModal()
+    setRevealingResults(true)
+    setTimeout(() => setRevealingResults(false), 1200)
   }
 
   /* ── Computed ── */
@@ -669,8 +676,16 @@ export default function BranchInventoryPage() {
             </div>
           </div>
 
+          {/* RESULTS LOADING BANNER */}
+          {revealingResults && (
+            <div className="ni-revealing-banner">
+              <span className="ni-revealing-spinner" />
+              <span>Rendering analysis results…</span>
+            </div>
+          )}
+
           {/* ANALYSIS PANEL */}
-          {analysis && (() => {
+          {!revealingResults && analysis && (() => {
             const parsed = parseAnalysis(analysis.analysis)
             const reorderSec = parsed.find(s => slug(s.title) === "reorder")
             const overstockSec = parsed.find(s => slug(s.title) === "overstock")
@@ -801,7 +816,7 @@ export default function BranchInventoryPage() {
                     <div className="ni-co-stat-lbl">DB Queries Run</div>
                   </div>
                 </div>
-                <button className="ni-btn-view" onClick={closeModal}>View Analysis Results</button>
+                <button className="ni-btn-view" onClick={handleViewResults}>View Analysis Results</button>
               </div>
             )}
 

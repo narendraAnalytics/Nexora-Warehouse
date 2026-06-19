@@ -341,6 +341,32 @@
 .ni-util-fill { height: 100%; border-radius: 3px; transition: width .3s; }
 .ni-util-pct { font-size: 10px; font-weight: 700; color: var(--muted); }
 
+/* ══ REVEALING RESULTS BANNER ══ */
+.ni-revealing-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 20px;
+  padding: 14px 20px;
+  background: linear-gradient(135deg, #FFF3E0, #FFF8EF);
+  border: 1px solid #FFD8A8;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #8B5C2A;
+}
+.ni-revealing-spinner {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 2.5px solid #FFD8A8;
+  border-top-color: var(--o2);
+  border-radius: 50%;
+  animation: ni-spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes ni-spin { to { transform: rotate(360deg); } }
+
 /* ══ ANALYSIS PANEL ══ */
 .ni-analysis-panel {
   background: var(--card);
