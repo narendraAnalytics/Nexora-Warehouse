@@ -162,9 +162,9 @@ async def get_pr_finance_analysis(pr_id: str, pool: asyncpg.Pool) -> dict:
         # Trailing 3-month total spend for this warehouse from finance_records
         spend_row = await conn.fetchrow("""
             SELECT
-                COALESCE(SUM(total_cost), 0)  AS total_spend_3m,
-                COALESCE(SUM(net_profit), 0)  AS total_profit_3m,
-                COUNT(*)                       AS record_count
+                COALESCE(SUM(amount), 0) AS total_spend_3m,
+                0::NUMERIC               AS total_profit_3m,
+                COUNT(*)                 AS record_count
             FROM finance_records
             WHERE warehouse_id = $1
               AND created_at >= NOW() - INTERVAL '3 months'
@@ -308,7 +308,25 @@ async def get_best_supplier_for_pr(pr_id: str, pool: asyncpg.Pool) -> dict:
                     supplier_data[sid] = dict(row)
 
         if not supplier_votes:
-            raise ValueError("No active suppliers found for the PR's product categories")
+            # Fallback: category strings didn't match — pick best overall active supplier
+            row = await conn.fetchrow(
+                """
+                SELECT id::TEXT, name, city,
+                       ROUND(reliability_score, 2)::FLOAT AS reliability_score,
+                       ROUND(risk_score, 2)::FLOAT        AS risk_score,
+                       avg_lead_days, payment_terms
+                FROM suppliers
+                WHERE is_active = TRUE
+                ORDER BY reliability_score DESC, risk_score ASC
+                LIMIT 1
+                """
+            )
+            if not row:
+                raise ValueError("No active suppliers in the database")
+            best = dict(row)
+            best["categories_covered"] = 0
+            best["total_categories"] = len(categories)
+            return best
 
         best_id = supplier_votes.most_common(1)[0][0]
         best = supplier_data[best_id]
