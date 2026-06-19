@@ -70,3 +70,30 @@ class PRDetailResponse(PRResponse):
     rejection_reason: str | None
     inventory_analysis: dict
     approval_history: list[PRApprovalHistoryRow] = []
+
+
+class POItem(BaseModel):
+    sku: str
+    name: str
+    category: str
+    quantity: int
+    unit_cost: float
+    line_total: float
+
+
+class POResponse(BaseModel):
+    id: str
+    po_number: str
+    pr_id: str
+    supplier_id: str
+    supplier_name: str
+    supplier_city: str
+    supplier_reliability: float
+    supplier_risk: float
+    warehouse_id: str
+    status: str
+    total_amount: float
+    expected_date: str
+    items: list[POItem]
+    ai_reasoning: str
+    created_at: str

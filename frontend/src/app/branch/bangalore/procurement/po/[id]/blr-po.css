@@ -1,0 +1,232 @@
+/* ══════════════════════════════════════
+   NEXORA PO DETAIL — BANGALORE BRANCH
+   Owned by: branch/bangalore/procurement/po/[id]/page.tsx
+   Do NOT import from any other page.
+══════════════════════════════════════ */
+.nexora-po {
+  --bg:       #FFF8EF;
+  --o1:       #FF8C00;
+  --o2:       #FF6B35;
+  --amber:    #FFB800;
+  --green:    #22C55E;
+  --red:      #EF4444;
+  --purple:   #A78BFA;
+  --teal:     #18D8C3;
+  --indigo:   #6366F1;
+  --text:     #2D1500;
+  --muted:    #8B5C2A;
+  --light:    #C09060;
+  --border:   #FFE4CC;
+  --card:     #fff;
+  --sh:       0 1px 6px rgba(0,0,0,.05);
+
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+.nexora-po * { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ── Topbar ── */
+.po-topbar {
+  flex-shrink: 0;
+  background: #fff;
+  border-bottom: 1px solid var(--border);
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 54px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.po-logo   { font-size: 15px; font-weight: 900; color: var(--o1); letter-spacing: .5px; }
+.po-sep    { width: 1px; height: 24px; background: var(--border); }
+.po-title  { font-size: 14px; font-weight: 700; color: var(--text); }
+.po-spacer { flex: 1; }
+.po-back {
+  display: flex; align-items: center; gap: 6px;
+  padding: 7px 14px;
+  background: rgba(255,107,53,.1);
+  border: 1px solid rgba(255,107,53,.2);
+  border-radius: 8px;
+  font-size: 11px; font-weight: 700; color: var(--o2);
+  cursor: pointer; transition: background .15s; text-decoration: none;
+  border: none;
+}
+.po-back:hover { background: rgba(255,107,53,.18); }
+
+/* ── Body ── */
+.po-body {
+  flex: 1;
+  padding: 20px;
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+}
+
+/* ── Main column ── */
+.po-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+
+/* ── Sidebar ── */
+.po-side {
+  width: 300px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: sticky;
+  top: 72px;
+}
+
+/* ── Card ── */
+.po-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px;
+  box-shadow: var(--sh);
+}
+
+/* ── Section heading ── */
+.po-sec-head {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.po-sec-head::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* ── PO number + status ── */
+.po-num {
+  font-family: 'Courier New', monospace;
+  font-size: 18px;
+  font-weight: 900;
+  color: var(--text);
+  letter-spacing: 1px;
+}
+.po-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .3px;
+  margin-top: 6px;
+}
+.po-badge.draft    { background: rgba(255,184,0,.15); color: #b45309; }
+.po-badge.pending  { background: rgba(245,158,11,.12); color: #d97706; }
+.po-badge.approved { background: rgba(34,197,94,.12); color: #15803d; }
+
+/* ── Supplier card ── */
+.po-supplier-card { display: flex; flex-direction: column; gap: 10px; }
+.po-supplier-name {
+  font-size: 16px; font-weight: 800; color: var(--text);
+}
+.po-supplier-city { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.po-chip-row { display: flex; gap: 8px; margin-top: 6px; }
+.po-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 700;
+}
+.po-chip.reliability { background: rgba(34,197,94,.12); color: #15803d; }
+.po-chip.risk-low    { background: rgba(34,197,94,.12); color: #15803d; }
+.po-chip.risk-med    { background: rgba(245,158,11,.12); color: #b45309; }
+.po-chip.risk-high   { background: rgba(239,68,68,.12);  color: #b91c1c; }
+.po-chip.lead        { background: rgba(99,102,241,.1);  color: #4f46e5; }
+
+/* ── Summary row ── */
+.po-summary-row {
+  display: flex;
+  gap: 10px;
+}
+.po-sum-card {
+  flex: 1;
+  background: #FFFAF5;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  text-align: center;
+}
+.po-sum-label { font-size: 10px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }
+.po-sum-value { font-size: 17px; font-weight: 900; color: var(--text); }
+.po-sum-sub   { font-size: 9px; color: var(--light); margin-top: 2px; }
+
+/* ── Items table ── */
+.po-table-wrap { overflow-x: auto; }
+.po-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.po-table th {
+  background: #FFF5EC;
+  padding: 8px 10px;
+  text-align: left;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.po-table td {
+  padding: 9px 10px;
+  border-bottom: 1px solid #FFF0E6;
+  color: var(--text);
+  vertical-align: middle;
+}
+.po-table tr:last-child td { border-bottom: none; }
+.po-table tr:hover td { background: #FFFAF5; }
+.po-sku { font-family: monospace; font-size: 11px; color: var(--muted); }
+
+/* ── Reasoning ── */
+.po-reasoning {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.55;
+  background: #FFFAF5;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+
+/* ── Next steps panel ── */
+.po-next-steps { display: flex; flex-direction: column; gap: 10px; }
+
+/* ── Loading ── */
+.po-loading {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 12px; height: 200px; color: var(--muted); font-size: 13px;
+}
+.po-spinner {
+  width: 32px; height: 32px;
+  border: 3px solid var(--border);
+  border-top-color: var(--o2);
+  border-radius: 50%;
+  animation: po-spin .7s linear infinite;
+}
+@keyframes po-spin { to { transform: rotate(360deg); } }
+@keyframes po-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: .35; transform: scale(.65); }
+}

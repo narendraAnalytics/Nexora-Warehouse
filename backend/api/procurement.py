@@ -21,6 +21,8 @@ from tools.pr_tools import (
     update_pr_status,
     log_agent_event,
     get_pr_finance_analysis,
+    get_best_supplier_for_pr,
+    create_po_from_pr,
 )
 
 router = APIRouter()
@@ -254,3 +256,154 @@ async def resubmit_pr(pr_id: str, body: PRApprovalRequest, request: Request):
         return result
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+# ── Phase 25: PO Generation ────────────────────────────────────────────────
+
+
+def _row_to_po_response(row: dict) -> dict:
+    items = row.get("items", [])
+    if isinstance(items, str):
+        items = json.loads(items)
+    created = row.get("created_at")
+    return {
+        "id":                   str(row["id"]),
+        "po_number":            row["po_number"],
+        "pr_id":                str(row.get("pr_id") or ""),
+        "supplier_id":          str(row.get("supplier_id") or ""),
+        "supplier_name":        row.get("supplier_name") or "",
+        "supplier_city":        row.get("supplier_city") or "",
+        "supplier_reliability": float(row.get("supplier_reliability") or 0),
+        "supplier_risk":        float(row.get("supplier_risk") or 0),
+        "warehouse_id":         str(row.get("warehouse_id") or ""),
+        "status":               row.get("status") or "draft",
+        "total_amount":         float(row.get("total_amount") or 0),
+        "expected_date":        str(row.get("expected_date") or ""),
+        "items":                items,
+        "ai_reasoning":         row.get("ai_reasoning") or "",
+        "created_at":           created.isoformat() if hasattr(created, "isoformat") else str(created or ""),
+    }
+
+
+@router.post("/pr/{pr_id}/generate-po", tags=["Procurement"])
+async def generate_po(pr_id: str, request: Request):
+    """
+    Phase 25 — Supplier Risk Agent + PO Generation.
+    Evaluates suppliers for the PR's categories, picks the best,
+    creates a draft PO linked to the PR. Idempotent — returns existing PO if already generated.
+    """
+    pool = request.app.state.pool
+    try:
+        # Check PR status
+        async with pool.acquire() as conn:
+            pr_row = await conn.fetchrow(
+                "SELECT status, workflow_id FROM purchase_requisitions WHERE id = $1", pr_id
+            )
+        if not pr_row:
+            raise HTTPException(status_code=404, detail="PR not found")
+        if pr_row["status"] != "APPROVED":
+            raise HTTPException(
+                status_code=400,
+                detail=f"Cannot generate PO: PR status is '{pr_row['status']}'. Must be APPROVED.",
+            )
+
+        # Idempotency — return existing PO if already created
+        async with pool.acquire() as conn:
+            existing = await conn.fetchrow(
+                """
+                SELECT po.id::TEXT, po.po_number, po.supplier_id::TEXT, po.warehouse_id::TEXT,
+                       po.status, po.total_amount::FLOAT, po.expected_date::TEXT,
+                       po.ai_reasoning, po.pr_id::TEXT, po.items, po.created_at,
+                       s.name AS supplier_name, s.city AS supplier_city,
+                       s.reliability_score::FLOAT AS supplier_reliability,
+                       s.risk_score::FLOAT        AS supplier_risk
+                FROM purchase_orders po
+                JOIN suppliers s ON s.id = po.supplier_id
+                WHERE po.pr_id = $1::uuid
+                LIMIT 1
+                """,
+                pr_id,
+            )
+        if existing:
+            return _row_to_po_response(dict(existing))
+
+        # Run Supplier Risk Agent (deterministic)
+        supplier = await get_best_supplier_for_pr(pr_id, pool)
+
+        # Create draft PO
+        po_row = await create_po_from_pr(pr_id, supplier, pool)
+
+        # Log agent event
+        await log_agent_event(
+            workflow_id=pr_row["workflow_id"] or "",
+            agent_name="supplier_risk_agent",
+            event_type="SUPPLIER_RISK_AGENT_COMPLETED",
+            payload={
+                "po_number":       po_row["po_number"],
+                "supplier":        supplier["name"],
+                "reliability":     supplier["reliability_score"],
+                "risk":            supplier["risk_score"],
+                "total_amount":    po_row["total_amount"],
+            },
+            pool=pool,
+            pr_id=pr_id,
+        )
+
+        return _row_to_po_response(po_row)
+
+    except HTTPException:
+        raise
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/po", tags=["Procurement"])
+async def list_pos(request: Request, warehouse_id: str | None = None, pr_id: str | None = None):
+    """List POs filtered by warehouse_id and/or pr_id."""
+    pool = request.app.state.pool
+    async with pool.acquire() as conn:
+        rows = await conn.fetch(
+            """
+            SELECT po.id::TEXT, po.po_number, po.supplier_id::TEXT, po.warehouse_id::TEXT,
+                   po.status, po.total_amount::FLOAT, po.expected_date::TEXT,
+                   po.ai_reasoning, po.pr_id::TEXT, po.items, po.created_at,
+                   s.name AS supplier_name, s.city AS supplier_city,
+                   s.reliability_score::FLOAT AS supplier_reliability,
+                   s.risk_score::FLOAT        AS supplier_risk
+            FROM purchase_orders po
+            JOIN suppliers s ON s.id = po.supplier_id
+            WHERE ($1::uuid IS NULL OR po.warehouse_id = $1::uuid)
+              AND ($2::uuid IS NULL OR po.pr_id = $2::uuid)
+            ORDER BY po.created_at DESC
+            LIMIT 50
+            """,
+            warehouse_id,
+            pr_id,
+        )
+    return [_row_to_po_response(dict(r)) for r in rows]
+
+
+@router.get("/po/{po_id}", tags=["Procurement"])
+async def get_po(po_id: str, request: Request):
+    """Get full PO detail."""
+    pool = request.app.state.pool
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow(
+            """
+            SELECT po.id::TEXT, po.po_number, po.supplier_id::TEXT, po.warehouse_id::TEXT,
+                   po.status, po.total_amount::FLOAT, po.expected_date::TEXT,
+                   po.ai_reasoning, po.pr_id::TEXT, po.items, po.created_at,
+                   s.name AS supplier_name, s.city AS supplier_city,
+                   s.reliability_score::FLOAT AS supplier_reliability,
+                   s.risk_score::FLOAT        AS supplier_risk
+            FROM purchase_orders po
+            JOIN suppliers s ON s.id = po.supplier_id
+            WHERE po.id = $1::uuid
+            """,
+            po_id,
+        )
+    if not row:
+        raise HTTPException(status_code=404, detail="PO not found")
+    return _row_to_po_response(dict(row))

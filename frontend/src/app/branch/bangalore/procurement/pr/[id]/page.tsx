@@ -137,6 +137,8 @@ export default function BranchPRDetailPage() {
   const [modalNotes, setModalNotes] = useState("")
   const [submitting, setSubmitting] = useState(false)
   const [toast, setToast] = useState("")
+  const [generating, setGenerating] = useState(false)
+  const [existingPoId, setExistingPoId] = useState<string | null>(null)
 
   const showToast = (msg: string) => {
     setToast(msg)
@@ -151,6 +153,16 @@ export default function BranchPRDetailPage() {
       if (!res.ok) throw new Error("Not found")
       const data: PRDetail = await res.json()
       setPR(data)
+      // Check if a PO already exists for this PR
+      if (data.status === "APPROVED") {
+        try {
+          const poRes = await fetch(`/api/procurement/po?pr_id=${prId}`)
+          if (poRes.ok) {
+            const pos = await poRes.json()
+            if (Array.isArray(pos) && pos.length > 0) setExistingPoId(pos[0].id)
+          }
+        } catch { /* non-fatal */ }
+      }
     } catch {
       showToast("Failed to load PR")
     } finally {
@@ -227,6 +239,25 @@ export default function BranchPRDetailPage() {
       showToast("Network error")
     } finally {
       setSubmitting(false)
+    }
+  }
+
+  // ── Generate PO ────────────────────────────────────────────────────────
+  async function handleGeneratePO() {
+    if (!pr) return
+    setGenerating(true)
+    try {
+      const res = await fetch(`/api/procurement/pr/${pr.id}/generate-po`, { method: "POST" })
+      const data = await res.json()
+      if (!res.ok) {
+        showToast(data.detail ?? "Failed to generate PO")
+      } else {
+        router.push(`/branch/bangalore/procurement/po/${data.id}`)
+      }
+    } catch {
+      showToast("Network error generating PO")
+    } finally {
+      setGenerating(false)
     }
   }
 
@@ -510,10 +541,10 @@ export default function BranchPRDetailPage() {
               <div className="prd-sec-head">What Happens Next</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 {[
-                  { step: 1, label: "Supplier Risk Agent", sub: "Evaluating best suppliers for PO",  active: true,  color: "#18D8C3" },
-                  { step: 2, label: "Procurement Agent",   sub: "Generate Purchase Order",            active: false, color: "#FF6B35" },
-                  { step: 3, label: "Send to Supplier",    sub: "PO dispatched for fulfillment",      active: false, color: "#6366F1" },
-                  { step: 4, label: "GRN & Payment",       sub: "Goods receipt + invoice settlement", active: false, color: "#22C55E" },
+                  { step: 1, label: "Supplier Risk Agent", sub: existingPoId ? "Supplier selected — PO created" : "Evaluate & select best supplier",  active: true,  color: "#18D8C3" },
+                  { step: 2, label: "Send to Supplier",    sub: "PO dispatched for fulfillment",      active: false, color: "#FF6B35" },
+                  { step: 3, label: "Goods Receipt (GRN)", sub: "Warehouse receives & inspects",      active: false, color: "#6366F1" },
+                  { step: 4, label: "Finance Verification",sub: "3-way match: PO + GRN + Invoice",    active: false, color: "#22C55E" },
                 ].map(s => (
                   <div key={s.step} style={{ display: "flex", gap: 10, alignItems: "flex-start", opacity: s.active ? 1 : 0.4 }}>
                     <div style={{ width: 24, height: 24, borderRadius: "50%", background: s.active ? s.color : "var(--border)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, color: "#fff", fontSize: 10, fontWeight: 800 }}>{s.step}</div>
@@ -521,9 +552,36 @@ export default function BranchPRDetailPage() {
                       <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text)" }}>{s.label}</div>
                       <div style={{ fontSize: 10, color: "var(--muted)", marginTop: 1 }}>{s.sub}</div>
                     </div>
-                    {s.active && <div style={{ width: 7, height: 7, borderRadius: "50%", background: s.color, flexShrink: 0, marginTop: 8, animation: "prd-pulse 1.5s ease-in-out infinite" }}/>}
+                    {s.active && !existingPoId && <div style={{ width: 7, height: 7, borderRadius: "50%", background: s.color, flexShrink: 0, marginTop: 8, animation: "prd-pulse 1.5s ease-in-out infinite" }}/>}
+                    {s.active && existingPoId && <div style={{ fontSize: 9, color: s.color, fontWeight: 700, marginTop: 9 }}>✓</div>}
                   </div>
                 ))}
+              </div>
+
+              {/* PO generation CTA */}
+              <div style={{ marginTop: 16 }}>
+                {existingPoId ? (
+                  <button
+                    onClick={() => router.push(`/branch/bangalore/procurement/po/${existingPoId}`)}
+                    className="prd-action-btn approve"
+                    style={{ background: "#18D8C3" }}
+                    title="View generated Purchase Order"
+                    aria-label="View generated Purchase Order"
+                  >
+                    View Purchase Order →
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleGeneratePO}
+                    disabled={generating}
+                    className="prd-action-btn approve"
+                    style={{ background: generating ? "var(--light)" : "#18D8C3" }}
+                    title="Run Supplier Risk Agent and generate PO"
+                    aria-label="Run Supplier Risk Agent and generate PO"
+                  >
+                    {generating ? "Running Supplier Agent..." : "▶ Run Supplier Evaluation"}
+                  </button>
+                )}
               </div>
             </div>
           )}

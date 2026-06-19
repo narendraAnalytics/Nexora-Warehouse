@@ -1,9 +1,11 @@
 """
 Phase 23 — Purchase Requisition tools.
+Phase 25 — Supplier evaluation + PO generation functions.
 Direct async DB functions (not @tool decorated) so the procurement API can call them directly.
 """
 import json
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
+from collections import Counter
 
 import asyncpg
 
@@ -258,6 +260,141 @@ async def update_pr_status(
             pr_id,
         )
     return dict(row)
+
+
+async def get_best_supplier_for_pr(pr_id: str, pool: asyncpg.Pool) -> dict:
+    """
+    Phase 25 — Supplier Risk Agent (deterministic).
+    Reads PR items, finds best supplier per category (reliability DESC, risk ASC),
+    returns the supplier that wins the most categories.
+    """
+    async with pool.acquire() as conn:
+        pr = await conn.fetchrow(
+            "SELECT items, warehouse_id FROM purchase_requisitions WHERE id = $1", pr_id
+        )
+        if not pr:
+            raise ValueError(f"PR {pr_id} not found")
+
+        items = pr["items"]
+        if isinstance(items, str):
+            items = json.loads(items)
+
+        categories = list({item["category"] for item in items if item.get("category")})
+        if not categories:
+            raise ValueError("PR has no item categories to evaluate suppliers for")
+
+        supplier_votes: Counter = Counter()
+        supplier_data: dict = {}
+
+        for cat in categories:
+            row = await conn.fetchrow(
+                """
+                SELECT id::TEXT, name, city,
+                       ROUND(reliability_score, 2)::FLOAT AS reliability_score,
+                       ROUND(risk_score, 2)::FLOAT        AS risk_score,
+                       avg_lead_days, payment_terms
+                FROM suppliers
+                WHERE is_active = TRUE
+                  AND categories @> ARRAY[$1]
+                ORDER BY reliability_score DESC, risk_score ASC
+                LIMIT 1
+                """,
+                cat,
+            )
+            if row:
+                sid = row["id"]
+                supplier_votes[sid] += 1
+                if sid not in supplier_data:
+                    supplier_data[sid] = dict(row)
+
+        if not supplier_votes:
+            raise ValueError("No active suppliers found for the PR's product categories")
+
+        best_id = supplier_votes.most_common(1)[0][0]
+        best = supplier_data[best_id]
+        best["categories_covered"] = supplier_votes[best_id]
+        best["total_categories"] = len(categories)
+        return best
+
+
+async def create_po_from_pr(pr_id: str, supplier: dict, pool: asyncpg.Pool) -> dict:
+    """
+    Phase 25 — Procurement Agent (deterministic).
+    Creates a draft PO for the PR's items sourced from the recommended supplier.
+    One PO per PR (all items grouped under the best supplier).
+    """
+    async with pool.acquire() as conn:
+        pr = await conn.fetchrow(
+            "SELECT warehouse_id, items, workflow_id FROM purchase_requisitions WHERE id = $1", pr_id
+        )
+        if not pr:
+            raise ValueError(f"PR {pr_id} not found")
+
+        warehouse_id = str(pr["warehouse_id"])
+        raw_items = pr["items"]
+        if isinstance(raw_items, str):
+            raw_items = json.loads(raw_items)
+
+        # Build PO line items from PR items
+        po_items = []
+        total_amount = 0.0
+        for item in raw_items:
+            qty = int(item.get("manager_qty") or item.get("agent_suggested_qty") or 0)
+            unit_cost = float(item.get("unit_cost") or 0)
+            line_total = round(unit_cost * qty, 2)
+            total_amount += line_total
+            po_items.append({
+                "sku":        item.get("sku", ""),
+                "name":       item.get("name", ""),
+                "category":   item.get("category", ""),
+                "quantity":   qty,
+                "unit_cost":  unit_cost,
+                "line_total": line_total,
+            })
+
+        # Sequential PO number per warehouse
+        year = datetime.now(timezone.utc).year
+        city_code = await conn.fetchval(
+            "SELECT city FROM warehouses WHERE id = $1::uuid", warehouse_id
+        )
+        city_code = (city_code or "WH")[:3].upper()
+        seq = await conn.fetchval(
+            "SELECT COUNT(*) + 1 FROM purchase_orders WHERE warehouse_id = $1::uuid", warehouse_id
+        )
+        po_number = f"PO-{year}-{city_code}-{seq:05d}"
+
+        avg_lead = int(supplier.get("avg_lead_days") or 14)
+        expected_date = (datetime.now(timezone.utc) + timedelta(days=avg_lead)).date()
+
+        ai_reasoning = (
+            f"Supplier Risk Agent selected {supplier['name']} ({supplier['city']}) "
+            f"— reliability score {supplier['reliability_score']}/10, risk score {supplier['risk_score']}/10. "
+            f"Best match for {supplier.get('categories_covered', 1)}/{supplier.get('total_categories', 1)} "
+            f"item categories in this PR."
+        )
+
+        supplier_id = supplier["id"]
+        row = await conn.fetchrow(
+            """
+            INSERT INTO purchase_orders
+                (po_number, supplier_id, warehouse_id, status, total_amount,
+                 initiated_by, expected_date, ai_reasoning, pr_id, items)
+            VALUES ($1, $2::uuid, $3::uuid, 'draft', $4, 'supplier_risk_agent', $5, $6, $7::uuid, $8)
+            RETURNING id::TEXT, po_number, supplier_id::TEXT, warehouse_id::TEXT,
+                      status, total_amount::FLOAT, expected_date::TEXT, ai_reasoning,
+                      pr_id::TEXT, items, created_at
+            """,
+            po_number, supplier_id, warehouse_id,
+            round(total_amount, 2), expected_date,
+            ai_reasoning, pr_id, json.dumps(po_items),
+        )
+
+    result = dict(row)
+    result["supplier_name"]        = supplier["name"]
+    result["supplier_city"]        = supplier["city"]
+    result["supplier_reliability"] = supplier["reliability_score"]
+    result["supplier_risk"]        = supplier["risk_score"]
+    return result
 
 
 async def log_agent_event(

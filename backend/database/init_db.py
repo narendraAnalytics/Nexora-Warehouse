@@ -325,3 +325,8 @@ async def init_db(pool: asyncpg.Pool) -> None:
             ALTER TABLE purchase_orders
             ADD COLUMN IF NOT EXISTS pr_id UUID REFERENCES purchase_requisitions(id)
         """)
+
+        await conn.execute("""
+            ALTER TABLE purchase_orders
+            ADD COLUMN IF NOT EXISTS items JSONB DEFAULT '[]'
+        """)
