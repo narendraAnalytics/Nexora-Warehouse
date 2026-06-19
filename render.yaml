@@ -5,7 +5,7 @@ services:
     region: singapore
     rootDir: backend
     healthCheckPath: /health
-    buildCommand: pip install uv && uv sync --frozen && uv run python -m rag.seed
+    buildCommand: pip install uv && uv sync --frozen && (uv run python -m rag.seed || true)
     startCommand: uv run uvicorn main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: APP_ENV
