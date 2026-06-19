@@ -330,3 +330,32 @@ async def init_db(pool: asyncpg.Pool) -> None:
             ALTER TABLE purchase_orders
             ADD COLUMN IF NOT EXISTS items JSONB DEFAULT '[]'
         """)
+
+        # ── Phase 25: Supplier seed (idempotent) ──────────────────────────────
+        await conn.execute("""
+            INSERT INTO suppliers (id, name, contact_person, email, phone, address, city,
+                                   categories, reliability_score, risk_score, avg_lead_days,
+                                   payment_terms, is_active)
+            VALUES
+                ('a1b2c3d4-0001-0001-0001-000000000001', 'TechBridge Electronics', 'Rajesh Kumar',
+                 'rajesh@techbridge.in', '+91-22-40001001', '101 Tech Park, Andheri East', 'Mumbai',
+                 ARRAY['TVs & Displays','Mobiles & Tablets','Gaming Consoles','Networking Equipment','Accessories','Laptops'],
+                 9.2, 1.5, 10, 'Net 30', TRUE),
+                ('a1b2c3d4-0002-0002-0002-000000000002', 'Horizon Distributors', 'Priya Sharma',
+                 'priya@horizondist.in', '+91-11-40002002', '45 Nehru Place, South Delhi', 'Delhi',
+                 ARRAY['TVs & Displays','Mobiles & Tablets','Gaming Consoles','Accessories'],
+                 8.5, 2.1, 14, 'Net 45', TRUE),
+                ('a1b2c3d4-0003-0003-0003-000000000003', 'NetCore Supply Co', 'Anil Reddy',
+                 'anil@netcoresupply.in', '+91-80-40003003', '22 Electronic City Phase 1', 'Bangalore',
+                 ARRAY['Networking Equipment','Accessories','Laptops'],
+                 9.0, 1.8, 7, 'Net 30', TRUE),
+                ('a1b2c3d4-0004-0004-0004-000000000004', 'Prime Tech Wholesale', 'Meena Iyer',
+                 'meena@primetech.in', '+91-44-40004004', '88 Anna Salai, T Nagar', 'Chennai',
+                 ARRAY['Mobiles & Tablets','Laptops','Accessories'],
+                 8.0, 2.8, 12, 'Net 30', TRUE),
+                ('a1b2c3d4-0005-0005-0005-000000000005', 'Digital Hub India', 'Suresh Rao',
+                 'suresh@digitalhub.in', '+91-40-40005005', '15 Cyber Towers, Hitech City', 'Hyderabad',
+                 ARRAY['Gaming Consoles','TVs & Displays','Networking Equipment','Accessories'],
+                 7.5, 3.2, 21, 'Net 60', TRUE)
+            ON CONFLICT (id) DO NOTHING
+        """)
