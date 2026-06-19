@@ -141,6 +141,62 @@ async def create_purchase_requisition(
     return dict(row)
 
 
+async def get_pr_finance_analysis(pr_id: str, pool: asyncpg.Pool) -> dict:
+    """
+    Fetch PR value + trailing-3-month warehouse spend to compute budget impact.
+    Called by the /finance-analysis endpoint — no LLM involved, deterministic.
+    """
+    async with pool.acquire() as conn:
+        pr = await conn.fetchrow(
+            "SELECT total_estimated_value, warehouse_id, approval_level FROM purchase_requisitions WHERE id = $1",
+            pr_id,
+        )
+        if not pr:
+            raise ValueError(f"PR {pr_id} not found")
+
+        pr_value = float(pr["total_estimated_value"] or 0)
+        warehouse_id = str(pr["warehouse_id"])
+
+        # Trailing 3-month total spend for this warehouse from finance_records
+        spend_row = await conn.fetchrow("""
+            SELECT
+                COALESCE(SUM(total_cost), 0)  AS total_spend_3m,
+                COALESCE(SUM(net_profit), 0)  AS total_profit_3m,
+                COUNT(*)                       AS record_count
+            FROM finance_records
+            WHERE warehouse_id = $1
+              AND created_at >= NOW() - INTERVAL '3 months'
+        """, warehouse_id)
+
+        total_spend_3m = float(spend_row["total_spend_3m"] or 0)
+        total_profit_3m = float(spend_row["total_profit_3m"] or 0)
+        record_count = int(spend_row["record_count"] or 0)
+        monthly_avg = round(total_spend_3m / 3, 2) if total_spend_3m > 0 else 0
+
+        impact_pct = round((pr_value / monthly_avg * 100), 1) if monthly_avg > 0 else None
+
+        if impact_pct is None:
+            recommendation = "INSUFFICIENT_DATA — no spending history for this warehouse"
+        elif impact_pct > 50:
+            recommendation = "HIGH IMPACT — PR exceeds 50% of monthly avg spend. Requires careful budget review."
+        elif impact_pct > 20:
+            recommendation = "MODERATE IMPACT — PR is within normal procurement range."
+        else:
+            recommendation = "LOW IMPACT — routine procurement, well within budget."
+
+        return {
+            "pr_id":            pr_id,
+            "pr_value":         pr_value,
+            "approval_level":   pr["approval_level"],
+            "monthly_avg_spend": monthly_avg,
+            "total_spend_3m":   total_spend_3m,
+            "total_profit_3m":  total_profit_3m,
+            "finance_records":  record_count,
+            "impact_pct":       impact_pct,
+            "recommendation":   recommendation,
+        }
+
+
 async def update_pr_status(
     pr_id: str,
     new_status: str,
@@ -150,11 +206,12 @@ async def update_pr_status(
     pool: asyncpg.Pool,
 ) -> dict:
     valid_transitions = {
-        "APPROVED":           ["PENDING", "RESUBMITTED"],
-        "REJECTED":           ["PENDING", "RESUBMITTED"],
-        "CHANGES_REQUESTED":  ["PENDING", "RESUBMITTED"],
-        "RESUBMITTED":        ["CHANGES_REQUESTED"],
-        "PENDING":            ["RESUBMITTED"],
+        "FINANCE_APPROVED":  ["PENDING", "RESUBMITTED"],
+        "APPROVED":          ["PENDING", "RESUBMITTED", "FINANCE_APPROVED"],
+        "REJECTED":          ["PENDING", "RESUBMITTED", "FINANCE_APPROVED"],
+        "CHANGES_REQUESTED": ["PENDING", "RESUBMITTED", "FINANCE_APPROVED"],
+        "RESUBMITTED":       ["CHANGES_REQUESTED"],
+        "PENDING":           ["RESUBMITTED"],
     }
 
     async with pool.acquire() as conn:

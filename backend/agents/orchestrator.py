@@ -70,6 +70,7 @@ Rules:
 5. Maximum 3 agents per task unless the task explicitly spans more domains.
 6. knowledge is only needed for policy/SOP questions.
 7. For executive briefings, CEO-level business health analysis, or morning briefings, select ceo.
+8. For purchase requisition tasks, PR approval tasks, or procurement review tasks → select inventory, demand_forecast, and procurement.
 
 Return a JSON with "agents" (list of agent names from the valid list) and "reasoning".
 """

@@ -49,6 +49,15 @@ interface AlertItem {
   status: string
   createdAt: string
 }
+interface PendingPR {
+  id: string
+  pr_number: string
+  total_estimated_value: number
+  approver_role: string
+  status: string
+  escalation_deadline: string
+  warehouse_id: string
+}
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 function formatCr(val: number) {
@@ -167,6 +176,7 @@ export default function DashboardPage() {
   const [ordersTrend, setOrdersTrend] = useState<TrendPoint[]>([])
   const [shipmentsTrend, setShipmentsTrend] = useState<TrendPoint[]>([])
   const [alertData, setAlertData] = useState<{ count: number; alerts: AlertItem[] }>({ count: 0, alerts: [] })
+  const [pendingPRs, setPendingPRs] = useState<PendingPR[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -190,14 +200,22 @@ export default function DashboardPage() {
       fetch("/api/dashboard/orders-trend").then((r) => r.json()),
       fetch("/api/dashboard/shipments-trend").then((r) => r.json()),
       fetch("/api/dashboard/alerts").then((r) => r.json()),
+      Promise.all([
+        fetch("/api/procurement/pr?status=PENDING").then((r) => r.json()).catch(() => []),
+        fetch("/api/procurement/pr?status=FINANCE_APPROVED").then((r) => r.json()).catch(() => []),
+      ]).then(([pending, finApproved]) => [
+        ...(Array.isArray(pending) ? pending : []),
+        ...(Array.isArray(finApproved) ? finApproved : []),
+      ]),
     ])
-      .then(([k, b, c, o, s, a]) => {
+      .then(([k, b, c, o, s, a, prs]) => {
         if (!k?.error) setKpis(k)
         if (Array.isArray(b)) setBranches(b)
         if (Array.isArray(c)) setCategories(c)
         if (Array.isArray(o)) setOrdersTrend(o)
         if (Array.isArray(s)) setShipmentsTrend(s)
         if (a && !a.error) setAlertData(a)
+        if (Array.isArray(prs)) setPendingPRs(prs)
         setLoading(false)
       })
       .catch(() => setLoading(false))
@@ -567,6 +585,67 @@ export default function DashboardPage() {
                 </div>
               </div>
             </div>
+
+            {/* ── PENDING APPROVALS ── */}
+            {(loading || pendingPRs.length > 0) && (
+              <div className="card cp" style={{ marginBottom: 18 }}>
+                <div className="ch">
+                  <div className="ct">
+                    Pending Approvals
+                    {pendingPRs.length > 0 && (
+                      <span style={{ marginLeft: 8, background: "#FF6B35", color: "#fff", borderRadius: 10, padding: "1px 8px", fontSize: 11, fontWeight: 700 }}>
+                        {pendingPRs.length}
+                      </span>
+                    )}
+                  </div>
+                  <button className="clink" onClick={() => router.push("/branch/bangalore/procurement/pr")}>View All PRs →</button>
+                </div>
+                {loading ? (
+                  <div style={{ display: "flex", gap: 10, padding: "6px 0" }}>
+                    <Skel w="100%" h={48} r={8}/><Skel w="100%" h={48} r={8}/>
+                  </div>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    {pendingPRs.map((pr) => {
+                      const isFinApproved = pr.status === "FINANCE_APPROVED"
+                      const statusColor = isFinApproved ? "#a78bfa" : "#f59e0b"
+                      const statusLabel = isFinApproved ? "Finance Approved — Awaiting CEO" : "Pending — Awaiting Finance"
+                      const deadlineMs = new Date(pr.escalation_deadline).getTime() - Date.now()
+                      const hoursLeft = Math.max(0, Math.floor(deadlineMs / 3600000))
+                      const deadlineUrgent = hoursLeft < 24
+                      const val = pr.total_estimated_value
+                      const valStr = val >= 1e7 ? `₹${(val/1e7).toFixed(2)} Cr` : val >= 1e5 ? `₹${(val/1e5).toFixed(1)}L` : `₹${Math.round(val).toLocaleString("en-IN")}`
+                      return (
+                        <div
+                          key={pr.id}
+                          onClick={() => router.push(`/branch/bangalore/procurement/pr/${pr.id}`)}
+                          style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", background: "#FAFAFA", borderRadius: 10, border: "1px solid #F0ECE6", cursor: "pointer", transition: "background .15s" }}
+                          onMouseEnter={e => (e.currentTarget.style.background = "#FFF4EC")}
+                          onMouseLeave={e => (e.currentTarget.style.background = "#FAFAFA")}
+                        >
+                          <div style={{ width: 36, height: 36, borderRadius: 8, background: "rgba(255,107,53,0.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF6B35" strokeWidth="2.2" strokeLinecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                          </div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontWeight: 700, fontSize: 12, color: "#2D1500" }}>{pr.pr_number}</div>
+                            <div style={{ fontSize: 11, color: "#8B5C2A", marginTop: 2 }}>
+                              <span style={{ color: statusColor, fontWeight: 600 }}>{statusLabel}</span>
+                            </div>
+                          </div>
+                          <div style={{ textAlign: "right", flexShrink: 0 }}>
+                            <div style={{ fontWeight: 800, fontSize: 13, color: "#2D1500" }}>{valStr}</div>
+                            <div style={{ fontSize: 10, color: deadlineUrgent ? "#EF4444" : "#8B5C2A", fontWeight: deadlineUrgent ? 700 : 400, marginTop: 2 }}>
+                              {deadlineUrgent ? `⚠ ${hoursLeft}h left` : `${hoursLeft}h remaining`}
+                            </div>
+                          </div>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C09060" strokeWidth="2" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* ── TOP PRODUCTS ── */}
             <div style={{fontSize:13,fontWeight:800,color:"var(--dark)",marginBottom:9}}>Top Products by Value</div>

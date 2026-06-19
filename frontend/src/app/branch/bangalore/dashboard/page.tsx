@@ -529,7 +529,7 @@ export default function BangaloreDashboard() {
             {/* Quick Actions */}
             <div className="bd-qa-card">
               <div className="bd-qa-title">Quick Actions</div>
-              <button className="bd-qa-btn procurement" onClick={() => router.push("/procurement/pr")}>
+              <button className="bd-qa-btn procurement" onClick={() => router.push("/branch/bangalore/procurement/pr")}>
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
                   <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
                   <polyline points="14 2 14 8 20 8"/>

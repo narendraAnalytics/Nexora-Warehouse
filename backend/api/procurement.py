@@ -20,6 +20,7 @@ from tools.pr_tools import (
     create_purchase_requisition,
     update_pr_status,
     log_agent_event,
+    get_pr_finance_analysis,
 )
 
 router = APIRouter()
@@ -171,12 +172,56 @@ async def get_pr(pr_id: str, request: Request):
     }
 
 
-@router.post("/pr/{pr_id}/approve", tags=["Procurement"])
-async def approve_pr(pr_id: str, body: PRApprovalRequest, request: Request):
+@router.get("/pr/{pr_id}/finance-analysis", tags=["Procurement"])
+async def finance_analysis(pr_id: str, request: Request):
+    """Finance Agent budget impact analysis for a PR — used by Finance Controller and CEO panels."""
     pool = request.app.state.pool
     try:
-        result = await update_pr_status(pr_id, "APPROVED", body.acted_by, body.acted_by_role, body.notes, pool)
+        return await get_pr_finance_analysis(pr_id, pool)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@router.post("/pr/{pr_id}/approve", tags=["Procurement"])
+async def approve_pr(pr_id: str, body: PRApprovalRequest, request: Request):
+    """
+    Role-aware approval:
+    - L5 PRs (CEO_AND_FINANCE): Finance Controller → FINANCE_APPROVED, then CEO → APPROVED
+    - L1–L4 PRs: correct single approver → APPROVED directly
+    """
+    pool = request.app.state.pool
+    try:
+        async with pool.acquire() as conn:
+            pr = await conn.fetchrow(
+                "SELECT status, approval_level FROM purchase_requisitions WHERE id = $1", pr_id
+            )
+        if not pr:
+            raise HTTPException(status_code=404, detail="PR not found")
+
+        current_status = pr["status"]
+        approval_level = pr["approval_level"]
+        role = body.acted_by_role.upper()
+
+        if approval_level == "L5":
+            if current_status == "PENDING" and role == "FINANCE_CONTROLLER":
+                new_status = "FINANCE_APPROVED"
+            elif current_status in ("PENDING", "RESUBMITTED") and role == "FINANCE_CONTROLLER":
+                new_status = "FINANCE_APPROVED"
+            elif current_status == "FINANCE_APPROVED" and role == "CEO":
+                new_status = "APPROVED"
+            else:
+                raise HTTPException(
+                    status_code=403,
+                    detail=f"Cannot approve: current status={current_status}, your role={role}, approval_level={approval_level}. "
+                           f"L5 PRs require Finance Controller first (PENDING→FINANCE_APPROVED), then CEO (FINANCE_APPROVED→APPROVED).",
+                )
+        else:
+            new_status = "APPROVED"
+
+        result = await update_pr_status(pr_id, new_status, body.acted_by, body.acted_by_role, body.notes, pool)
         return result
+    except HTTPException:
+        raise
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
