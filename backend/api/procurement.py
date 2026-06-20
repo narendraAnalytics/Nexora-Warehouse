@@ -608,6 +608,52 @@ async def list_payments(request: Request, grn_id: str | None = None, po_id: str 
     return [_row_to_payment_response(dict(r)) for r in rows]
 
 
+@router.get("/suppliers", tags=["Procurement"])
+async def list_suppliers(request: Request):
+    """List all active suppliers with scores."""
+    pool = request.app.state.pool
+    async with pool.acquire() as conn:
+        rows = await conn.fetch(
+            """
+            SELECT id::TEXT, name, city, categories,
+                   reliability_score::FLOAT, risk_score::FLOAT,
+                   avg_lead_days, payment_terms, contact_person, email, phone
+            FROM suppliers
+            WHERE is_active = TRUE
+            ORDER BY reliability_score DESC, risk_score ASC
+            """
+        )
+    return [dict(r) for r in rows]
+
+
+@router.patch("/po/{po_id}/supplier", tags=["Procurement"])
+async def update_po_supplier(po_id: str, request: Request):
+    """Override supplier on a draft PO."""
+    body = await request.json()
+    supplier_id = body.get("supplier_id")
+    if not supplier_id:
+        raise HTTPException(status_code=400, detail="supplier_id required")
+    pool = request.app.state.pool
+    async with pool.acquire() as conn:
+        po = await conn.fetchrow(
+            "SELECT status FROM purchase_orders WHERE id = $1::uuid", po_id
+        )
+        if not po:
+            raise HTTPException(status_code=404, detail="PO not found")
+        if po["status"] != "draft":
+            raise HTTPException(status_code=400, detail="Can only change supplier on draft POs")
+        supplier = await conn.fetchrow(
+            "SELECT id, name FROM suppliers WHERE id = $1::uuid AND is_active = TRUE", supplier_id
+        )
+        if not supplier:
+            raise HTTPException(status_code=404, detail="Supplier not found")
+        await conn.execute(
+            "UPDATE purchase_orders SET supplier_id = $1::uuid, updated_at = NOW() WHERE id = $2::uuid",
+            supplier_id, po_id,
+        )
+    return {"ok": True, "supplier_id": supplier_id, "supplier_name": supplier["name"]}
+
+
 @router.get("/payment/{payment_id}", tags=["Procurement"])
 async def get_payment(payment_id: str, request: Request):
     """Get payment detail."""

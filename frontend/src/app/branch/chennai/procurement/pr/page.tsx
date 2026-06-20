@@ -508,12 +508,9 @@ export default function BranchPRPage() {
             Generate PR
           </button>
         ) : (
-          <button className="pr-btn success" disabled={loading} onClick={submitForApproval}>
-            {loading
-              ? <span className="pr-dot" />
-              : <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="22 2 11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-            }
-            Submit for Approval
+          <button className="pr-btn success" onClick={() => router.push(`/branch/${branch}/procurement/pr/${pr!.id}`)}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            View PR Details
           </button>
         )}
       </div>

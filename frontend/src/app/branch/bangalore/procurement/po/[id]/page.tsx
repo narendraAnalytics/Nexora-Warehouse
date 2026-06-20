@@ -31,6 +31,18 @@ interface PODetail {
   created_at:           string
 }
 
+interface Supplier {
+  id:                string
+  name:              string
+  city:              string
+  categories:        string[]
+  reliability_score: number
+  risk_score:        number
+  avg_lead_days:     number
+  payment_terms:     string
+  contact_person:    string | null
+}
+
 function formatINR(val: number): string {
   if (val >= 1e7) return `₹${(val / 1e7).toFixed(2)} Cr`
   if (val >= 1e5) return `₹${(val / 1e5).toFixed(1)}L`
@@ -53,23 +65,49 @@ export default function BranchPODetailPage() {
   const [loading, setLoading] = useState(true)
   const [creatingGrn, setCreatingGrn] = useState(false)
   const [existingGrnId, setExistingGrnId] = useState<string | null>(null)
+  const [allSuppliers, setAllSuppliers] = useState<Supplier[]>([])
+  const [selectedSupplierId, setSelectedSupplierId] = useState<string>("")
+  const [changingSupplier, setChangingSupplier] = useState(false)
+  const [supplierToast, setSupplierToast] = useState("")
 
   useEffect(() => {
     if (!poId) return
-    fetch(`/api/procurement/po/${poId}`)
-      .then(r => r.json())
-      .then((d: PODetail) => {
-        setPO(d)
-        // Check for existing GRN (idempotency)
-        return fetch(`/api/procurement/grn?po_id=${poId}`)
-      })
-      .then(r => r.json())
-      .then((grns: { id: string }[]) => {
+    Promise.all([
+      fetch(`/api/procurement/po/${poId}`).then(r => r.json()),
+      fetch(`/api/procurement/grn?po_id=${poId}`).then(r => r.json()),
+      fetch(`/api/procurement/suppliers`).then(r => r.json()),
+    ])
+      .then(([poData, grns, suppliers]: [PODetail, { id: string }[], Supplier[]]) => {
+        setPO(poData)
+        setSelectedSupplierId(poData.supplier_id)
         if (Array.isArray(grns) && grns.length > 0) setExistingGrnId(grns[0].id)
+        if (Array.isArray(suppliers)) setAllSuppliers(suppliers)
       })
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [poId])
+
+  async function handleUpdateSupplier() {
+    if (!po || selectedSupplierId === po.supplier_id) return
+    setChangingSupplier(true)
+    try {
+      const res = await fetch(`/api/procurement/po/${poId}/supplier`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ supplier_id: selectedSupplierId }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setSupplierToast(data.detail ?? "Failed to update supplier"); return }
+      setPO(prev => prev ? { ...prev, supplier_id: selectedSupplierId, supplier_name: data.supplier_name } : prev)
+      setSupplierToast(`Supplier updated to ${data.supplier_name}`)
+      setTimeout(() => setSupplierToast(""), 3000)
+    } catch {
+      setSupplierToast("Failed to update supplier")
+      setTimeout(() => setSupplierToast(""), 3000)
+    } finally {
+      setChangingSupplier(false)
+    }
+  }
 
   async function handleCreateGRN() {
     setCreatingGrn(true)
@@ -138,27 +176,95 @@ export default function BranchPODetailPage() {
         {/* ── Main column ── */}
         <div className="po-main">
 
-          {/* Supplier card */}
+          {/* Supplier selection card */}
           <div className="po-card">
-            <div className="po-sec-head">Recommended Supplier</div>
-            <div className="po-supplier-card">
-              <div>
-                <div className="po-supplier-name">{po.supplier_name}</div>
-                <div className="po-supplier-city">📍 {po.supplier_city}</div>
-              </div>
-              <div className="po-chip-row">
-                <span className="po-chip reliability">
-                  ★ Reliability {po.supplier_reliability.toFixed(1)}/10
-                </span>
-                <span className={`po-chip ${riskChipClass(po.supplier_risk)}`}>
-                  ⚠ Risk {po.supplier_risk.toFixed(1)}/10
-                </span>
-                <span className="po-chip lead">
-                  Supplier Risk Agent
-                </span>
-              </div>
-              <div className="po-reasoning">{po.ai_reasoning}</div>
+            <div className="po-sec-head" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <span>Select Supplier</span>
+              {!existingGrnId && selectedSupplierId !== po.supplier_id && (
+                <button
+                  onClick={handleUpdateSupplier}
+                  disabled={changingSupplier}
+                  style={{
+                    padding: "5px 14px", borderRadius: 7, border: "none",
+                    background: changingSupplier ? "var(--border)" : "#18D8C3",
+                    color: changingSupplier ? "var(--muted)" : "#0a1628",
+                    fontWeight: 800, fontSize: 11, cursor: changingSupplier ? "not-allowed" : "pointer",
+                  }}
+                  title="Confirm supplier change" aria-label="Confirm supplier change"
+                >
+                  {changingSupplier ? "Updating…" : "Confirm Change"}
+                </button>
+              )}
             </div>
+            {supplierToast && (
+              <div style={{ margin: "0 0 10px", padding: "8px 12px", borderRadius: 8, background: "rgba(24,216,195,.12)", color: "#18D8C3", fontSize: 12, fontWeight: 600 }}>
+                {supplierToast}
+              </div>
+            )}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {allSuppliers.length === 0 ? (
+                <div className="po-supplier-card">
+                  <div className="po-supplier-name">{po.supplier_name}</div>
+                  <div className="po-supplier-city">📍 {po.supplier_city}</div>
+                  <div className="po-chip-row">
+                    <span className="po-chip reliability">★ Reliability {po.supplier_reliability.toFixed(1)}/10</span>
+                    <span className={`po-chip ${riskChipClass(po.supplier_risk)}`}>⚠ Risk {po.supplier_risk.toFixed(1)}/10</span>
+                    <span className="po-chip lead">AI Recommended</span>
+                  </div>
+                  <div className="po-reasoning">{po.ai_reasoning}</div>
+                </div>
+              ) : (
+                allSuppliers.map(s => {
+                  const isSelected = s.id === selectedSupplierId
+                  const isAiPick = s.id === po.supplier_id
+                  const canChange = !existingGrnId && po.status === "draft"
+                  return (
+                    <div
+                      key={s.id}
+                      onClick={() => canChange && setSelectedSupplierId(s.id)}
+                      style={{
+                        padding: "12px 14px", borderRadius: 10,
+                        border: isSelected ? "1.5px solid #18D8C3" : "1.5px solid var(--border)",
+                        background: isSelected ? "rgba(24,216,195,.06)" : "var(--card-bg)",
+                        cursor: canChange ? "pointer" : "default",
+                        transition: "border-color .15s, background .15s",
+                        display: "flex", flexDirection: "column", gap: 6,
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <div style={{
+                          width: 16, height: 16, borderRadius: "50%", flexShrink: 0,
+                          border: `2px solid ${isSelected ? "#18D8C3" : "var(--border)"}`,
+                          background: isSelected ? "#18D8C3" : "transparent",
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                        }}>
+                          {isSelected && <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#0a1628" }}/>}
+                        </div>
+                        <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text)", flex: 1 }}>{s.name}</div>
+                        {isAiPick && (
+                          <span style={{ fontSize: 9, fontWeight: 800, color: "#18D8C3", border: "1px solid rgba(24,216,195,.3)", borderRadius: 5, padding: "2px 6px", letterSpacing: ".4px" }}>
+                            AI PICK
+                          </span>
+                        )}
+                      </div>
+                      <div style={{ fontSize: 11, color: "var(--muted)", paddingLeft: 24 }}>📍 {s.city} · {s.avg_lead_days}d lead · {s.payment_terms}</div>
+                      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", paddingLeft: 24 }}>
+                        <span className="po-chip reliability">★ {s.reliability_score.toFixed(1)}/10 reliability</span>
+                        <span className={`po-chip ${riskChipClass(s.risk_score)}`}>⚠ {s.risk_score.toFixed(1)}/10 risk</span>
+                      </div>
+                      {isAiPick && isSelected && (
+                        <div className="po-reasoning" style={{ marginTop: 4 }}>{po.ai_reasoning}</div>
+                      )}
+                    </div>
+                  )
+                })
+              )}
+            </div>
+            {existingGrnId && (
+              <div style={{ marginTop: 10, fontSize: 11, color: "var(--muted)", textAlign: "center" }}>
+                Supplier locked — GRN already created
+              </div>
+            )}
           </div>
 
           {/* Summary row */}
