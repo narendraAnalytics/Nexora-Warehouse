@@ -112,13 +112,14 @@ function recChipClass(rec: string): string {
 }
 
 // ── Panel: determines which approval panel to show ────────────────────────
-function approvalPanel(status: string, approverRole: string): "finance" | "ceo" | "both" | "resubmit" | "none" {
+// Branch pages never show CEO panel — CEO must approve from CEO Dashboard only
+function approvalPanel(status: string, approverRole: string): "finance" | "awaiting_ceo" | "resubmit" | "none" {
   const isL5 = approverRole === "CEO_AND_FINANCE"
   if (status === "PENDING") {
     if (isL5) return "finance"
-    return "ceo"
+    return "awaiting_ceo"
   }
-  if (status === "FINANCE_APPROVED") return "ceo"
+  if (status === "FINANCE_APPROVED") return "awaiting_ceo"
   if (status === "CHANGES_REQUESTED" || status === "RESUBMITTED") return "resubmit"
   return "none"
 }
@@ -476,35 +477,30 @@ export default function ChennaiPRDetailPage() {
             </div>
           )}
 
-          {/* CEO Final Approval Panel */}
-          {(panel === "ceo") && (
+          {/* Awaiting CEO Approval — read-only info card (no action buttons in branch) */}
+          {panel === "awaiting_ceo" && (
             <div className="prd-card">
-              <div className="prd-sec-head">CEO Final Approval</div>
+              <div className="prd-sec-head">Awaiting CEO Approval</div>
               {pr.status === "FINANCE_APPROVED" && (
                 <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12, fontSize: 11, background: "rgba(34,197,94,.08)", padding: "7px 10px", borderRadius: 8, color: "#15803d", fontWeight: 600 }}>
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
                   Finance Controller has approved
                 </div>
               )}
-              <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 12, lineHeight: 1.5 }}>
-                {pr.status === "FINANCE_APPROVED"
-                  ? "Finance analysis is complete. Your final approval converts this PR to APPROVED and triggers the Supplier Risk Agent."
-                  : "Your approval is required for this requisition value."}
+              <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 14, lineHeight: 1.6 }}>
+                This PR is pending CEO review. CEO approval can only be done from the CEO Dashboard.
               </div>
-              <div className="prd-actions">
-                <button className="prd-action-btn approve" onClick={() => setModal("approve")}>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
-                  Final Approve
-                </button>
-                <button className="prd-action-btn changes" onClick={() => setModal("changes")}>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.51"/></svg>
-                  Request Changes
-                </button>
-                <button className="prd-action-btn reject" onClick={() => setModal("reject")}>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                  Reject PR
-                </button>
-              </div>
+              <button
+                onClick={() => router.push("/dashboard")}
+                style={{
+                  width: "100%", padding: "9px 0", borderRadius: 8, border: "1px solid rgba(24,216,195,.3)",
+                  background: "rgba(24,216,195,.07)", color: "#18D8C3",
+                  fontWeight: 700, fontSize: 12, cursor: "pointer",
+                }}
+                title="Go to CEO Dashboard" aria-label="Go to CEO Dashboard"
+              >
+                → Open CEO Dashboard
+              </button>
             </div>
           )}
 
