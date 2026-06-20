@@ -10,7 +10,8 @@
 
 ## Current Status
 
-**Phase: 23 — Procurement Phase 1: PR UI (CURRENT)**
+**Phase: 26.5 — Chennai Branch Full Procurement Cycle (COMPLETE)**
+**Next: Phase 27 — Sales Workflow (Customer Master → Orders → Fulfillment)**
 
 ### ✅ Phase 21.5 — Product Master / Add Product Page (COMPLETE)
 
@@ -63,6 +64,54 @@ POST       /api/procurement/pr/[id]/resubmit
 **CSS:** scoped to `.nexora-procurement` — same pattern as `.nexora-dash`. No `:root` vars, no global resets.
 
 **Branch inventory CSS rule:** each branch inventory page owns its own CSS co-located with `page.tsx` (e.g. `blr-inventory.css`). Never import `src/app/inventory/inventory.css` (CEO page) from a branch page — CEO CSS changes will break branch layouts. `.nexora-inventory` root must explicitly set `flex-direction: column`; omitting it defaults to row and produces a broken horizontal layout.
+
+### ✅ Phase 26.5 — Branch Full Procurement Cycle (COMPLETE)
+
+Both **Bangalore** and **Chennai** branches have a complete procurement cycle. Pattern for adding a new branch:
+
+**File structure per branch** (`{city}` = `bangalore` | `chennai`):
+```
+src/app/branch/{city}/
+├── page.tsx                         ← auth page (login form, fixed credentials)
+├── {city}-auth.css                  ← scoped to .{city}-auth, CSS vars + keyframes prefixed chn-/blr-
+├── dashboard/
+│   ├── page.tsx                     ← KPIs, charts, PR list, AI assistant
+│   └── {prefix}-dash.css            ← scoped to .{prefix}-dash; bd-* classes ALL scoped under root
+├── inventory/
+│   ├── page.tsx                     ← inventory analysis, modal steps, sessionStorage handoff
+│   └── {prefix}-inventory.css       ← .nexora-inventory root (safe to share class name, isolated file)
+└── procurement/
+    ├── pr/
+    │   ├── page.tsx                 ← PR list + Generate PR button
+    │   ├── {prefix}-pr.css          ← .nexora-pr root
+    │   └── [id]/
+    │       ├── page.tsx             ← PR detail + HITL approval + PO generation routing
+    │       └── {prefix}-pr-detail.css  ← .nexora-pr-detail root
+    ├── po/[id]/
+    │   ├── page.tsx                 ← PO detail + GRN creation routing
+    │   └── {prefix}-po.css          ← .nexora-po root
+    └── grn/[id]/
+        ├── page.tsx                 ← GRN detail + payment recording
+        └── {prefix}-grn.css         ← .nexora-grn root (dark navy theme)
+```
+
+**Branch credentials:** `{city}branch` / `admin@123` (e.g. `chennaibranch`, `bangalorebranch`)
+
+**Branch API routes** (Next.js, read from Neon with `WHERE city = '{City}'`):
+```
+src/app/api/branch/{city}/kpis/route.ts
+src/app/api/branch/{city}/orders-trend/route.ts
+src/app/api/branch/{city}/inventory-categories/route.ts
+```
+
+**Key substitutions when cloning a branch:**
+- Warehouse UUID (hardcoded in inventory page and dashboard PR fetch)
+- sessionStorage key: `{prefix}_pr_analysis`
+- All `/branch/{old-city}/` routes → `/branch/{new-city}/`
+- Dashboard CSS keyframes: `bd-pulse` → `{prefix}-bd-pulse`, `bd-shimmer` → `{prefix}-bd-shimmer`
+- Auth CSS keyframes: all `@keyframes` prefixed with city code
+
+**No backend changes needed** — all FastAPI procurement/inventory APIs accept any `warehouse_id`.
 
 **PR form rules (Phase 23):**
 - PR form is branch-scoped: `/branch/bangalore/procurement/pr/page.tsx` — NOT global `/procurement/pr/`. Each branch owns its own PR form (matches branch inventory pattern).

@@ -36,6 +36,7 @@ Each folder has its own `CLAUDE.md` with full context. Always read the relevant 
 | Backend + Frontend | Phase 23 — Procurement Phase 1: PR Lifecycle | ✅ Complete |
 | Backend + Frontend | Phase 25 — Supplier Risk Agent + PO Generation | ✅ Complete |
 | Backend + Frontend | Phase 26 — GRN + Payment (Full Procurement Cycle) | ✅ Complete |
+| Frontend | Phase 26.5 — Chennai Branch Full Procurement Cycle | ✅ Complete |
 | Next up | Phase 27 — Sales Workflow (Customer Master → Orders → Fulfillment) | ⏳ Pending |
 | Deferred | Phase 22 — WebSocket Real-Time / WhatsApp / Monitoring | ⏳ Pending |
 
@@ -102,6 +103,12 @@ Hyderabad · Bangalore · Chennai · Mumbai · Pune
 - Products API schema: frontend `/api/products` writes to the **backend** `products` table schema — `name` (not `product_name`), UUID `id`, `unit_price`, `unit_of_measure`. After product save, auto-upserts `inventory` row for **all active warehouses** (`SELECT id FROM warehouses WHERE is_active = TRUE`).
 - Backend `products` table columns (owned by `init_db.py`): `id UUID`, `sku`, `name`, `category`, `brand`, `description`, `unit_price`, `unit_cost`, `unit_of_measure`, `weight_kg`, `is_active`. Do NOT add `product_name` — that was the old frontend-only schema.
 - Bangalore warehouse UUID: `531e5c42-e4a1-4db0-a35c-a434f3b94344` (Neon DB, seeded in Phase 1).
+- Chennai warehouse UUID: `2521c486-9c74-49a2-8802-374dcb7d5d5d` (Neon DB, seeded in Phase 1).
+- Branch pattern: each branch lives under `src/app/branch/{city}/` with its own auth page, dashboard, inventory, and full procurement cycle (PR → PO → GRN → Payment). Bangalore and Chennai are both complete. All backend APIs are generic (accept any `warehouse_id`) — no backend changes needed to add a branch.
+- Branch CSS scoping: auth → `.{city}-auth`, dashboard → `.chn-dash` / `.blr-dash` (all `bd-*` classes scoped under root to prevent cross-page conflict), inventory/PR/PO/GRN → `.nexora-inventory` / `.nexora-pr` / `.nexora-po` / `.nexora-grn` (safe to reuse root class since files are isolated per branch).
+- Branch sessionStorage keys: Bangalore → `blr_pr_analysis`, Chennai → `chn_pr_analysis`.
+- Branch login credentials: Bangalore → `bangalorebranch` / `admin@123`, Chennai → `chennaibranch` / `admin@123`.
+- CEO dashboard branch cards: Bangalore and Chennai cards are clickable (`cursor: pointer`) — navigates to `/branch/{city}`. Other branch cards are non-interactive.
 - PR status flow: `PENDING → APPROVED | REJECTED | CHANGES_REQUESTED → RESUBMITTED → PENDING`
 - Approval level from DB (`approval_matrix` table), not hardcoded. CEO can change thresholds without deployment.
 - PR number: `PR-2026-BLR-0001`. Workflow ID: `WF-2026-BLR-00042` (links PR→PO→GRN→Payment chain).
