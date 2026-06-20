@@ -618,7 +618,7 @@ export default function DashboardPage() {
                       return (
                         <div
                           key={pr.id}
-                          onClick={() => router.push(`/branch/bangalore/procurement/pr/${pr.id}`)}
+                          onClick={() => router.push(`/procurement/pr/${pr.id}`)}
                           style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", background: "#FAFAFA", borderRadius: 10, border: "1px solid #F0ECE6", cursor: "pointer", transition: "background .15s" }}
                           onMouseEnter={e => (e.currentTarget.style.background = "#FFF4EC")}
                           onMouseLeave={e => (e.currentTarget.style.background = "#FAFAFA")}

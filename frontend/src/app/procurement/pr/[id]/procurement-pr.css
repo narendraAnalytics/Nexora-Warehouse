@@ -1,0 +1,140 @@
+/* ══════════════════════════════════════
+   NEXORA CEO PR DETAIL
+   Owned by: procurement/pr/[id]/page.tsx
+   Do NOT import from any other page.
+══════════════════════════════════════ */
+.nexora-ceo-pr {
+  --bg:     #FFF8EF;
+  --o1:     #FF8C00;
+  --o2:     #FF6B35;
+  --amber:  #FFB800;
+  --green:  #22C55E;
+  --red:    #EF4444;
+  --purple: #A78BFA;
+  --orange: #F97316;
+  --teal:   #18D8C3;
+  --indigo: #6366F1;
+  --text:   #2D1500;
+  --muted:  #8B5C2A;
+  --light:  #C09060;
+  --border: #FFE4CC;
+  --card:   #fff;
+  --sh:     0 1px 6px rgba(0,0,0,.05);
+
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+.nexora-ceo-pr * { box-sizing: border-box; margin: 0; padding: 0; }
+
+.prd-topbar { flex-shrink: 0; background: #fff; border-bottom: 1px solid var(--border); padding: 0 20px; display: flex; align-items: center; gap: 12px; height: 54px; position: sticky; top: 0; z-index: 10; }
+.prd-logo   { font-size: 15px; font-weight: 900; color: var(--o1); letter-spacing: .5px; }
+.prd-sep    { width: 1px; height: 24px; background: var(--border); }
+.prd-title  { font-size: 14px; font-weight: 700; color: var(--text); }
+.prd-spacer { flex: 1; }
+.prd-back { display: flex; align-items: center; gap: 6px; padding: 7px 14px; background: rgba(255,107,53,.1); border: 1px solid rgba(255,107,53,.2); border-radius: 8px; font-size: 11px; font-weight: 700; color: var(--o2); cursor: pointer; transition: background .15s; border: none; }
+.prd-back:hover { background: rgba(255,107,53,.18); }
+
+.prd-body { flex: 1; padding: 20px; display: flex; gap: 18px; align-items: flex-start; }
+.prd-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+.prd-side { width: 320px; flex-shrink: 0; display: flex; flex-direction: column; gap: 14px; position: sticky; top: 72px; }
+.prd-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 18px; box-shadow: var(--sh); }
+
+.prd-header-row { display: flex; align-items: flex-start; gap: 14px; flex-wrap: wrap; }
+.prd-pr-num { font-family: 'Courier New', monospace; font-size: 20px; font-weight: 900; color: var(--text); letter-spacing: 1px; }
+.prd-wf-id  { font-size: 10px; color: var(--muted); margin-top: 3px; }
+.prd-status-badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; letter-spacing: .3px; }
+.prd-status-badge.PENDING          { background: rgba(245,158,11,.12); color: #d97706; }
+.prd-status-badge.FINANCE_APPROVED { background: rgba(167,139,250,.15); color: #7c3aed; }
+.prd-status-badge.APPROVED         { background: rgba(34,197,94,.12);  color: #15803d; }
+.prd-status-badge.REJECTED         { background: rgba(239,68,68,.12);  color: #b91c1c; }
+.prd-status-badge.CHANGES_REQUESTED { background: rgba(249,115,22,.12); color: #c2410c; }
+.prd-status-badge.RESUBMITTED      { background: rgba(167,139,250,.12); color: #7c3aed; }
+.prd-deadline { font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 8px; background: rgba(255,184,0,.12); color: #b45309; }
+.prd-deadline.urgent { background: rgba(239,68,68,.12); color: #b91c1c; }
+
+.prd-summary-row { display: flex; gap: 10px; }
+.prd-sum-card  { flex: 1; background: #FFFAF5; border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; text-align: center; }
+.prd-sum-label { font-size: 10px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }
+.prd-sum-value { font-size: 17px; font-weight: 900; color: var(--text); }
+.prd-sum-sub   { font-size: 9px; color: var(--light); margin-top: 2px; }
+
+.prd-table-wrap { overflow-x: auto; }
+.prd-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.prd-table th { background: #FFF5EC; padding: 8px 10px; text-align: left; font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.prd-table td { padding: 9px 10px; border-bottom: 1px solid #FFF0E6; color: var(--text); vertical-align: middle; }
+.prd-table tr:last-child td { border-bottom: none; }
+.prd-table tr:hover td { background: #FFFAF5; }
+.prd-sku { font-family: monospace; font-size: 11px; color: var(--muted); }
+.prd-qty-changed { color: var(--o2); font-weight: 700; }
+.prd-stock-low   { color: var(--red); font-weight: 700; }
+
+.prd-sec-head { font-size: 12px; font-weight: 800; color: var(--text); margin-bottom: 12px; display: flex; align-items: center; gap: 7px; }
+.prd-sec-head::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+.prd-timeline { display: flex; flex-direction: column; gap: 0; }
+.prd-tl-item { display: flex; gap: 12px; padding-bottom: 14px; position: relative; }
+.prd-tl-item:last-child { padding-bottom: 0; }
+.prd-tl-dot-col { display: flex; flex-direction: column; align-items: center; }
+.prd-tl-dot { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 10px; font-weight: 800; }
+.prd-tl-dot.SUBMITTED         { background: rgba(99,102,241,.12); color: #6366F1; }
+.prd-tl-dot.PENDING           { background: rgba(245,158,11,.12); color: #d97706; }
+.prd-tl-dot.FINANCE_APPROVED  { background: rgba(167,139,250,.15); color: #7c3aed; }
+.prd-tl-dot.APPROVED          { background: rgba(34,197,94,.12);  color: #15803d; }
+.prd-tl-dot.REJECTED          { background: rgba(239,68,68,.12);  color: #b91c1c; }
+.prd-tl-dot.CHANGES_REQUESTED { background: rgba(249,115,22,.12); color: #c2410c; }
+.prd-tl-dot.RESUBMITTED       { background: rgba(167,139,250,.12); color: #7c3aed; }
+.prd-tl-line { width: 2px; flex: 1; background: var(--border); margin-top: 4px; }
+.prd-tl-item:last-child .prd-tl-line { display: none; }
+.prd-tl-body   { flex: 1; padding-top: 2px; }
+.prd-tl-action { font-size: 11px; font-weight: 700; color: var(--text); }
+.prd-tl-by     { font-size: 10px; color: var(--muted); margin-top: 2px; }
+.prd-tl-note   { font-size: 10px; color: var(--light); margin-top: 3px; font-style: italic; }
+.prd-tl-time   { font-size: 9px; color: var(--light); margin-top: 4px; }
+
+.prd-finance-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+.prd-fin-metric { background: #FFFAF5; border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; }
+.prd-fin-label  { font-size: 9px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }
+.prd-fin-val    { font-size: 14px; font-weight: 900; color: var(--text); }
+.prd-fin-sub    { font-size: 9px; color: var(--light); margin-top: 1px; }
+
+.prd-rec-chip { display: inline-block; padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; margin-bottom: 14px; }
+.prd-rec-chip.HIGH     { background: rgba(239,68,68,.1); color: #b91c1c; }
+.prd-rec-chip.MODERATE { background: rgba(245,158,11,.1); color: #b45309; }
+.prd-rec-chip.LOW      { background: rgba(34,197,94,.1); color: #15803d; }
+.prd-rec-chip.UNKNOWN  { background: rgba(107,114,128,.1); color: #374151; }
+.prd-rec-text { font-size: 11px; color: var(--muted); line-height: 1.5; }
+
+.prd-actions { display: flex; flex-direction: column; gap: 8px; }
+.prd-action-btn { display: flex; align-items: center; justify-content: center; gap: 7px; padding: 11px; border-radius: 10px; font-size: 12px; font-weight: 700; cursor: pointer; border: none; transition: opacity .15s, transform .1s; width: 100%; }
+.prd-action-btn:hover    { opacity: .88; }
+.prd-action-btn:active   { transform: scale(.97); }
+.prd-action-btn:disabled { opacity: .45; cursor: not-allowed; }
+.prd-action-btn.approve  { background: #22C55E; color: #fff; }
+.prd-action-btn.reject   { background: #EF4444; color: #fff; }
+.prd-action-btn.changes  { background: #F97316; color: #fff; }
+.prd-action-btn.resubmit { background: var(--indigo); color: #fff; }
+
+.prd-modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: flex; align-items: center; justify-content: center; z-index: 50; padding: 20px; }
+.prd-modal { background: #fff; border-radius: 16px; padding: 24px; width: 100%; max-width: 420px; box-shadow: 0 20px 60px rgba(0,0,0,.2); }
+.prd-modal-title { font-size: 15px; font-weight: 800; color: var(--text); margin-bottom: 6px; }
+.prd-modal-sub   { font-size: 12px; color: var(--muted); margin-bottom: 16px; }
+.prd-modal textarea { width: 100%; border: 1.5px solid var(--border); border-radius: 10px; padding: 10px 12px; font-size: 12px; font-family: inherit; resize: vertical; min-height: 80px; outline: none; color: var(--text); background: #FFFAF5; }
+.prd-modal textarea:focus { border-color: var(--o2); }
+.prd-modal-btns { display: flex; gap: 8px; margin-top: 12px; }
+.prd-modal-cancel  { flex: 1; padding: 9px; border-radius: 8px; font-size: 12px; font-weight: 700; background: #F5F5F5; border: none; cursor: pointer; color: var(--muted); }
+.prd-modal-confirm { flex: 1; padding: 9px; border-radius: 8px; font-size: 12px; font-weight: 700; border: none; cursor: pointer; color: #fff; }
+.prd-modal-confirm.approve  { background: #22C55E; }
+.prd-modal-confirm.reject   { background: #EF4444; }
+.prd-modal-confirm.changes  { background: #F97316; }
+.prd-modal-confirm.resubmit { background: var(--indigo); }
+
+.prd-toast { position: fixed; bottom: 24px; right: 24px; background: #1F2937; color: #fff; padding: 10px 18px; border-radius: 10px; font-size: 12px; font-weight: 600; z-index: 100; box-shadow: 0 4px 20px rgba(0,0,0,.25); animation: prd-toast-in .25s ease; }
+@keyframes prd-toast-in { from { transform: translateY(12px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.prd-loading { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; height: 200px; color: var(--muted); font-size: 13px; }
+.prd-spinner { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--o2); border-radius: 50%; animation: prd-spin .7s linear infinite; }
+@keyframes prd-spin { to { transform: rotate(360deg); } }
+@keyframes prd-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .35; transform: scale(.65); } }
