@@ -37,6 +37,7 @@ Each folder has its own `CLAUDE.md` with full context. Always read the relevant 
 | Backend + Frontend | Phase 25 — Supplier Risk Agent + PO Generation | ✅ Complete |
 | Backend + Frontend | Phase 26 — GRN + Payment (Full Procurement Cycle) | ✅ Complete |
 | Frontend | Phase 26.5 — Chennai Branch Full Procurement Cycle | ✅ Complete |
+| Frontend + Backend | Phase 26.6 — Procurement UX Fixes (CEO approval flow, supplier selection, PR submit fix) | ✅ Complete |
 | Next up | Phase 27 — Sales Workflow (Customer Master → Orders → Fulfillment) | ⏳ Pending |
 | Deferred | Phase 22 — WebSocket Real-Time / WhatsApp / Monitoring | ⏳ Pending |
 
@@ -126,3 +127,10 @@ Hyderabad · Bangalore · Chennai · Mumbai · Pune
 - `render.yaml` build command: `pip install uv && uv sync --frozen` — RAG seed step permanently removed (data seeded once in Phase 3, re-seeding breaks build with `ConnectionDoesNotExistError`).
 - GRN page idempotency: on load, use `GET /api/procurement/payment?grn_id=...` to check for existing payment — never POST on page load.
 - Full procurement cycle route: `PR (PENDING→APPROVED) → PO (draft) → GRN (completed) → Payment (paid)` — all linked by FK chain `pr_id → po_id → grn_id → payment_id`.
+- PR form action bar: after PR is generated (status=PENDING), shows **"View PR Details"** button (navigates to PR detail page) — NOT "Submit for Approval". PR is already in the approval queue on creation; the `/resubmit` endpoint is only for CHANGES_REQUESTED/REJECTED PRs.
+- CEO approval rule: CEO approval buttons ONLY exist at `/procurement/pr/[id]` (CEO dashboard page, `frontend/src/app/procurement/pr/[id]/page.tsx`). Branch PR detail pages (`/branch/{city}/procurement/pr/[id]`) show a read-only "Awaiting CEO Approval" card with a link to the CEO dashboard — never action buttons.
+- CEO PR detail page: `frontend/src/app/procurement/pr/[id]/page.tsx` — scoped to `.nexora-ceo-pr`. Full approval panel (Finance Controller step for L5 PRs, CEO Final Approve for others). Derives branch city from `warehouse_id` using UUID map (Bangalore: `531e5c42-...`, Chennai: `2521c486-...`). After approval shows branch dashboard link.
+- CEO dashboard PR routing: pending PR clicks route to `/procurement/pr/${id}` — NOT to `/branch/bangalore/procurement/pr/${id}` (that was a bug, now fixed).
+- PO supplier selection: PO page fetches all active suppliers via `GET /procurement/suppliers` and shows a radio-select list. AI-recommended supplier is pre-selected and marked "AI PICK". Manager can switch supplier and click "Confirm Change" → `PATCH /procurement/po/{id}/supplier`. Selection is locked once GRN is created.
+- New backend endpoints (Phase 26.6): `GET /procurement/suppliers` (list all active), `PATCH /procurement/po/{id}/supplier` (override supplier on draft PO only).
+- New frontend API routes (Phase 26.6): `api/procurement/suppliers/route.ts`, `api/procurement/po/[id]/supplier/route.ts`.

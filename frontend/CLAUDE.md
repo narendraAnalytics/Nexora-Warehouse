@@ -10,7 +10,7 @@
 
 ## Current Status
 
-**Phase: 26.5 — Chennai Branch Full Procurement Cycle (COMPLETE)**
+**Phase: 26.6 — Procurement UX Fixes (COMPLETE)**
 **Next: Phase 27 — Sales Workflow (Customer Master → Orders → Fulfillment)**
 
 ### ✅ Phase 21.5 — Product Master / Add Product Page (COMPLETE)
@@ -64,6 +64,22 @@ POST       /api/procurement/pr/[id]/resubmit
 **CSS:** scoped to `.nexora-procurement` — same pattern as `.nexora-dash`. No `:root` vars, no global resets.
 
 **Branch inventory CSS rule:** each branch inventory page owns its own CSS co-located with `page.tsx` (e.g. `blr-inventory.css`). Never import `src/app/inventory/inventory.css` (CEO page) from a branch page — CEO CSS changes will break branch layouts. `.nexora-inventory` root must explicitly set `flex-direction: column`; omitting it defaults to row and produces a broken horizontal layout.
+
+### ✅ Phase 26.6 — Procurement UX Fixes (COMPLETE)
+
+**Files changed:**
+- `branch/chennai/procurement/pr/page.tsx` + `branch/bangalore/procurement/pr/page.tsx` — PR form action bar: replaced "Submit for Approval" (wrong `/resubmit` call on PENDING PR) with "View PR Details" navigation button
+- `branch/chennai/procurement/pr/[id]/page.tsx` + Bangalore equivalent — `approvalPanel()` returns `"awaiting_ceo"` instead of `"ceo"` for branch pages; CEO Final Approval panel replaced with read-only "Awaiting CEO Approval" card + link to `/dashboard`
+- `branch/chennai/procurement/po/[id]/page.tsx` + Bangalore equivalent — replaced static "Recommended Supplier" card with interactive radio-select list of all active suppliers; "AI PICK" badge on AI-recommended; "Confirm Change" PATCH call; locked once GRN exists
+- `procurement/pr/[id]/page.tsx` **NEW** — CEO PR approval page at `/procurement/pr/[id]`; CSS scoped to `.nexora-ceo-pr`; full approve/reject/changes panel; detects branch city from warehouse UUID; shows branch dashboard link after approval
+- `dashboard/page.tsx` — PR click routing fixed from hardcoded `/branch/bangalore/procurement/pr/${id}` to `/procurement/pr/${id}`
+- `api/procurement/suppliers/route.ts` **NEW** — `GET /api/procurement/suppliers` proxy
+- `api/procurement/po/[id]/supplier/route.ts` **NEW** — `PATCH /api/procurement/po/{id}/supplier` proxy
+
+**Key rules added:**
+- CEO approval ONLY at `/procurement/pr/[id]` (CEO page) — branch pages are read-only for CEO actions
+- After PR creation → "View PR Details" button, NOT "Submit for Approval"
+- PO page shows all suppliers; manager picks; PATCH saves; locked after GRN
 
 ### ✅ Phase 26.5 — Branch Full Procurement Cycle (COMPLETE)
 
