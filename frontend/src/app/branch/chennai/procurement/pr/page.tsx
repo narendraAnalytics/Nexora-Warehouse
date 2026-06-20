@@ -86,6 +86,9 @@ export default function BranchPRPage() {
   const [analysisAt, setAnalysisAt] = useState("")
   const [addingRow,  setAddingRow]  = useState(false)
   const [newRow,     setNewRow]     = useState<NewRow>(BLANK_NEW_ROW)
+  const [products,      setProducts]      = useState<{ id: string; sku: string; name: string; category: string; brand: string; unit_price: number }[]>([])
+  const [productSearch, setProductSearch] = useState("")
+  const [showDropdown,  setShowDropdown]  = useState(false)
 
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(""), 3500) }
 
@@ -120,6 +123,16 @@ export default function BranchPRPage() {
     } catch { /* sessionStorage unavailable */ }
   }, [])
 
+  useEffect(() => {
+    fetch("/api/products/list").then(r => r.json()).then(d => setProducts(d.products ?? []))
+  }, [])
+
+  const selectProduct = (p: typeof products[0]) => {
+    setNewRow(r => ({ ...r, name: p.name, sku: p.sku, category: p.category, unit_cost: String(p.unit_price) }))
+    setProductSearch(p.name)
+    setShowDropdown(false)
+  }
+
   const updateQty = (idx: number, val: string) => {
     const qty = Math.max(0, parseInt(val) || 0)
     setItems(prev => prev.map((it, i) =>
@@ -153,6 +166,7 @@ export default function BranchPRPage() {
       is_manual:           true,
     }])
     setNewRow(BLANK_NEW_ROW)
+    setProductSearch("")
     setAddingRow(false)
   }
 
@@ -385,7 +399,34 @@ export default function BranchPRPage() {
                     <tr className="pr-add-item-row">
                       <td style={{ color: "var(--o1)", fontSize: 10, fontWeight: 700 }}>+</td>
                       <td>
-                        <input className="pr-new-input" placeholder="Product name *" value={newRow.name} onChange={e => setNewRow(r => ({ ...r, name: e.target.value }))} />
+                        <div style={{ position: "relative" }}>
+                          <input
+                            className="pr-new-input"
+                            placeholder="Search product name *"
+                            title="Search and select a product"
+                            aria-label="Search and select a product"
+                            autoComplete="off"
+                            value={productSearch}
+                            onChange={e => { setProductSearch(e.target.value); setShowDropdown(true); setNewRow(r => ({ ...r, name: "" })) }}
+                            onFocus={() => setShowDropdown(true)}
+                            onBlur={() => setTimeout(() => setShowDropdown(false), 150)}
+                          />
+                          {showDropdown && (
+                            <div style={{ position: "absolute", top: "100%", left: 0, right: 0, zIndex: 50, background: "var(--card, #1a1f2e)", border: "1px solid var(--border, rgba(255,255,255,0.08))", borderRadius: 6, maxHeight: 200, overflowY: "auto", boxShadow: "0 8px 24px rgba(0,0,0,0.4)", marginTop: 2 }}>
+                              {(() => {
+                                const q = productSearch.toLowerCase()
+                                const filtered = products.filter(p => p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q)).slice(0, 10)
+                                if (filtered.length === 0) return <div style={{ padding: "8px 12px", fontSize: 11, color: "var(--muted)" }}>No products found</div>
+                                return filtered.map(p => (
+                                  <div key={p.id} onMouseDown={() => selectProduct(p)} style={{ padding: "8px 12px", cursor: "pointer", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                                    <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text)" }}>{p.name}</div>
+                                    <div style={{ fontSize: 10, color: "var(--muted)", marginTop: 2 }}>{p.sku} · {p.category}</div>
+                                  </div>
+                                ))
+                              })()}
+                            </div>
+                          )}
+                        </div>
                         <div style={{ display: "flex", gap: 6, marginTop: 4 }}>
                           <input className="pr-new-input" placeholder="SKU" style={{ width: "50%" }} value={newRow.sku} onChange={e => setNewRow(r => ({ ...r, sku: e.target.value }))} />
                           <input className="pr-new-input" placeholder="Category" style={{ width: "50%" }} value={newRow.category} onChange={e => setNewRow(r => ({ ...r, category: e.target.value }))} />
@@ -405,7 +446,7 @@ export default function BranchPRPage() {
                       <td>
                         <div style={{ display: "flex", gap: 4 }}>
                           <button className="pr-add-confirm-btn" onClick={confirmAddRow}>Add</button>
-                          <button className="pr-remove-btn" title="Cancel adding item" aria-label="Cancel adding item" onClick={() => { setAddingRow(false); setNewRow(BLANK_NEW_ROW) }}>
+                          <button className="pr-remove-btn" title="Cancel adding item" aria-label="Cancel adding item" onClick={() => { setAddingRow(false); setNewRow(BLANK_NEW_ROW); setProductSearch(""); setShowDropdown(false) }}>
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                           </button>
                         </div>
